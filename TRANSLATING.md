@@ -11,7 +11,7 @@ The project has two parts:
 
 | Weblate component | What it covers | Where it lives | Status |
 |:--|:--|:--|:--|
-| **App** | Everything built for the phone: the home feed, the player, comments, downloads, casting, sign-in, updates | `smarttubetv/src/stmobile/res/values-*/strings_mobile.xml` | English and Spanish only: **start here** |
+| **App** | Everything built for the phone: the home feed, the player, comments, downloads, casting, sign-in, updates | `smarttubetv/src/stmobile/res/values-*/strings_mobile.xml` | English, Spanish and a Simplified Chinese seed: **start here** |
 | **Shared settings and messages** | Settings screens, player menus and messages inherited from [SmartTube](https://github.com/yuliskov/SmartTube) | `common/src/main/res/values-*/strings.xml` | About 45 languages, some incomplete |
 
 Some shared strings belong to SmartTube's TV interface and never appear on a phone. They are

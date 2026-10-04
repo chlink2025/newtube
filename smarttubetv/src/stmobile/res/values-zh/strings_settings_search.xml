@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Simplified Chinese seed translation for Settings search.
+     Keywords are what a Chinese-speaking user would type, not translations of the English. -->
+<resources>
+    <string name="mobile_settings_search_hint">搜索设置</string>
+    <string name="mobile_settings_search_none">没有与“%1$s”匹配的设置</string>
+
+    <!-- Words people search with that a setting's title doesn't contain. Space-separated; each
+         word matches as a word start. Written as the words people would type. -->
+    <string name="mobile_settings_search_kw_account">登录 登出 退出 谷歌 账号 切换</string>
+    <string name="mobile_settings_search_kw_theme">深色 浅色 夜间 模式 外观 颜色 主题</string>
+    <string name="mobile_settings_search_kw_country">国家 地区</string>
+    <string name="mobile_settings_search_kw_start_screen">启动 打开 默认 首页 标签</string>
+    <string name="mobile_settings_search_kw_interface_size">界面 缩放 字体 大小 密度 放大 缩小</string>
+    <string name="mobile_settings_search_kw_tabs">底部 导航 探索</string>
+    <string name="mobile_settings_search_kw_hidden">隐藏 看过 过滤 首播 直播</string>
+    <string name="mobile_settings_search_kw_video_menu">菜单 三个点 长按 选项</string>
+    <string name="mobile_settings_search_kw_channels_order">订阅 排序 频道</string>
+    <string name="mobile_settings_search_kw_watch_history">暂停 历史 隐身</string>
+    <string name="mobile_settings_search_kw_video_ends">自动播放 重复 循环 随机 下一个</string>
+    <string name="mobile_settings_search_kw_background">后台 画中画 音频 最小化</string>
+    <string name="mobile_settings_search_kw_natural_voice">音调 语速 声音</string>
+    <string name="mobile_settings_search_kw_audio_focus">来电 通知 其他应用 打断</string>
+    <string name="mobile_settings_search_kw_hide_related">推荐 相关 接下来播放</string>
+    <string name="mobile_settings_search_kw_dislikes">踩 return youtube dislike ryd</string>
+    <string name="mobile_settings_search_kw_quality">分辨率 4k 1080p 720p 高清 省流量 移动数据</string>
+    <string name="mobile_settings_search_kw_loudness">音量 均衡 响度 自动</string>
+    <string name="mobile_settings_search_kw_player_volume">音量 声音</string>
+    <string name="mobile_settings_search_kw_captions">字幕 cc</string>
+    <string name="mobile_settings_search_kw_sponsorblock">跳过 赞助 广告 片段 片头</string>
+    <string name="mobile_settings_search_kw_dearrow">标题党 标题 缩略图</string>
+    <string name="mobile_settings_search_kw_backup">备份 导出 导入 保存 设置</string>
+    <string name="mobile_settings_search_kw_video_format">编码 vp9 av1 h264 avc hdr 60fps</string>
+    <string name="mobile_settings_search_kw_buffer">缓冲 缓存 内存 加载</string>
+    <string name="mobile_settings_search_kw_dns">dns ipv4 ipv6 服务器</string>
+    <string name="mobile_settings_search_kw_conscrypt">ssl tls 证书 安全 屏蔽 byebyedpi</string>
+    <string name="mobile_settings_search_kw_multi_profiles">多账号 各自 不同</string>
+    <string name="mobile_settings_search_kw_updates">更新 版本 新版</string>
+    <string name="mobile_settings_search_kw_diagnostic_log">报错 日志 调试 反馈</string>
+    <string name="mobile_settings_search_kw_gesture_levels">手势 亮度 音量</string>
+    <string name="mobile_settings_search_kw_gesture_seek">手势 快进 快退 跳过 进度</string>
+</resources>

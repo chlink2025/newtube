@@ -19,6 +19,8 @@ and cast to SmartTube on your TV.
 
 **[Website](https://newtube.org/) · [Download](#download) · [Features](#features) · [How sign-in works](#how-sign-in-works) · [FAQ](#faq) · [Translate](#translate) · [Credits](#built-on-smarttube)**
 
+**English | [简体中文](README.zh-CN.md)**
+
 <br>
 
 <img src=".github/assets/hero.webp" width="100%" alt="Three NewTube screens: the sign-in code, the watch page playing Sintel, and the Downloads tab">
