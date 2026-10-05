@@ -699,6 +699,7 @@
                     android:layout_marginTop="4dp"
                     android:paddingHorizontal="@dimen/mobile_watch_content_padding"
                     android:autoLink="web"
+                    android:textIsSelectable="true"
                     android:textColor="@color/mobile_color_on_surface_secondary"
                     android:textColorLink="@color/mobile_color_link"
                     android:textSize="14sp"

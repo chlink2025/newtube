@@ -74,6 +74,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:textColor="@color/mobile_color_on_surface_secondary"
+                android:textIsSelectable="true"
                 android:textSize="14sp"
                 tools:text="MKBHD: Quality Tech Videos | YouTuber | Consumer Electronics | Tech Head" />
 

@@ -1,9 +1,11 @@
 name: Build signed preview
 
-# A signed release build that goes nowhere: same toolchain, signing and checks
-# as release.yml (including the F-Droid twin APK), but the APKs are only kept
+# A signed release build that goes nowhere: same toolchain and signing as
+# release.yml (including the F-Droid twin APK), but the APKs are only kept
 # as a workflow artifact. No update manifest, no attestation, and no GitHub
-# Release is created or touched.
+# Release is created or touched. Unlike release.yml it does not pin NewTube's
+# production certificate: this workflow exists in the fork only, where builds
+# sign with their own key, so the check is just that the APK verifies.
 #
 # Trigger it by hand from the Actions tab, or with:
 #   gh workflow run preview-signed.yml --ref <branch-or-tag>
@@ -33,8 +35,6 @@ jobs:
     environment: release
     env:
       TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-      # SHA-256 of the certificate every NewTube release has been signed with.
-      EXPECTED_CERT: 2ef99d76edfad988ad17cdee8ba18c634e230fe1e3cb1fdc6cdb0249370a36c9
       NDK_VERSION: 21.0.6113669   # smarttubetv/build.gradle ndkVersion (strips the .so files)
       CMDLINE_TOOLS_VERSION: "23.0"   # profgen; F-Droid's recipe installs the same version
     steps:
@@ -117,14 +117,8 @@ jobs:
           apksigner="$(ls -d "$ANDROID_HOME"/build-tools/[0-9]* | sort -V | tail -1)/apksigner"
           echo "Using $apksigner"
           for apk in dist/*.apk; do
-            out="$("$apksigner" verify --print-certs "$apk" 2>&1)" || { echo "$out"; echo "::error::apksigner rejected $(basename "$apk")."; exit 1; }
-            certs="$(printf '%s\n' "$out" | grep -oE 'certificate SHA-256 digest: [0-9a-f]{64}' | awk '{print $4}' | sort -u)"
-            if [ "$certs" != "$EXPECTED_CERT" ]; then
-              echo "$out"
-              echo "::error::$(basename "$apk") is signed with '${certs}', not NewTube's certificate."
-              exit 1
-            fi
-            echo "$(basename "$apk"): signed with NewTube's certificate"
+            out="$("$apksigner" verify "$apk" 2>&1)" || { echo "$out"; echo "::error::apksigner rejected $(basename "$apk")."; exit 1; }
+            echo "$(basename "$apk"): signature OK"
           done
           (cd dist && sha256sum -- *.apk > SHA256SUMS && cat SHA256SUMS)
 
