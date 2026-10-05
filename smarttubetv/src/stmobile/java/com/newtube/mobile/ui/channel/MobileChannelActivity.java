@@ -16,12 +16,14 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
+import com.liskovsoft.mediaserviceinterfaces.data.ChannelHeader;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.app.presenters.ChannelPresenter;
 import com.liskovsoft.smartyoutubetv2.common.app.views.ChannelView;
 import com.liskovsoft.smartyoutubetv2.common.utils.LoadFailure;
+import com.liskovsoft.smartyoutubetv2.common.utils.Utils;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.newtube.mobile.ui.browse.VideoCardAdapter;
 import com.newtube.mobile.ui.common.FilteredPageTopUp;
@@ -80,6 +82,11 @@ public class MobileChannelActivity extends MobileActivity
     private RecyclerView mGrid;
     private GridLayoutManager mLayoutManager;
     private VideoCardAdapter mAdapter;
+    /** NEWTUBE(channel-about): the author's About block, the grid's first (full-span) row. */
+    private ChannelHeaderAdapter mHeaderAdapter;
+    private ChannelAboutSheet mAboutSheet;
+    /** NEWTUBE(channel-about): full About once loaded (links, artist bio), null until then. */
+    private ChannelHeader mFullAbout;
     private TabLayout mTabs;
     private ProgressBar mProgressBar;
     private TextView mTitleView;
@@ -159,32 +166,78 @@ public class MobileChannelActivity extends MobileActivity
     private void setupGrid() {
         mLayoutManager = new GridLayoutManager(this, computeSpanCount());
         mAdapter = new VideoCardAdapter(this::onVideoClicked, this::onVideoLongClicked);
+        mHeaderAdapter = new ChannelHeaderAdapter(this::onAboutClicked);
         mLoadMoreFooter = new LoadMoreFailureAdapter(this::retryLoadMore);
 
-        // Channel rows (rare here) span the whole grid width in multi-column layouts, and so does
-        // the "Couldn't load more" row after the cards.
+        // The About header is one full-width row in front of the cards; channel rows (rare here)
+        // span the whole grid width in multi-column layouts, and so does the "Couldn't load more"
+        // row after the cards.
         mLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                return position >= mAdapter.getItemCount() || mAdapter.isFullSpan(position)
+                return isHeaderPosition(position) || isCardFullSpan(position) || isFooterPosition(position)
                         ? mLayoutManager.getSpanCount() : 1;
             }
         });
 
-        mGrid.setHasFixedSize(true);
         mGrid.setItemViewCacheSize(8);
         mGrid.setLayoutManager(mLayoutManager);
-        // Cards first, so grid positions below the footer are card positions.
-        mGrid.setAdapter(new ConcatAdapter(mAdapter, mLoadMoreFooter));
+        // NOT setHasFixedSize: the optional header row changes the content height.
+        mGrid.setAdapter(new ConcatAdapter(mHeaderAdapter, mAdapter, mLoadMoreFooter));
         // Next cards' thumbnails decoded before they scroll in (no grey card + fade on a fling).
-        com.newtube.mobile.ui.common.FeedThumbnailPreloader.attach(mGrid, mAdapter);
+        // Grid positions are shifted by the optional header row.
+        com.newtube.mobile.ui.common.FeedThumbnailPreloader.attach(mGrid, position -> {
+            int card = position - headerOffset();
+            return card >= 0 && card < mAdapter.getItemCount() ? mAdapter.getCurrentList().get(card) : null;
+        });
         mGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 // dy == 0: a layout pass changed the visible range, not the user.
                 maybeTriggerPagination(dy != 0);
+                applyToolbarTitleAlpha();
             }
         });
+    }
+
+    private int headerOffset() {
+        return mHeaderAdapter.hasHeader() ? 1 : 0;
+    }
+
+    private boolean isHeaderPosition(int position) {
+        return position == 0 && mHeaderAdapter.hasHeader();
+    }
+
+    private boolean isCardFullSpan(int position) {
+        int card = position - headerOffset();
+
+        return card >= 0 && card < mAdapter.getItemCount() && mAdapter.isFullSpan(card);
+    }
+
+    private boolean isFooterPosition(int position) {
+        return position >= headerOffset() + mAdapter.getItemCount();
+    }
+
+    /** The channel name is already the biggest thing in the header, so the toolbar copy fades in
+     *  as the header scrolls away (same behaviour as the playlist header). */
+    private void applyToolbarTitleAlpha() {
+        if (!mHeaderAdapter.hasHeader() || mGrid.getVisibility() != View.VISIBLE) {
+            mTitleView.setAlpha(1f);
+            return;
+        }
+
+        View header = mLayoutManager.findViewByPosition(0);
+        float collapsed;
+
+        if (header == null) {
+            collapsed = 1f;
+        } else if (header.getHeight() <= 0) {
+            collapsed = 0f;
+        } else {
+            collapsed = Math.min(1f, Math.max(0f, -header.getTop() / (float) header.getHeight()));
+        }
+
+        mTitleView.setAlpha(Math.max(0f, (collapsed - 0.75f) * 4f));
     }
 
     private void setupTabs() {
@@ -300,10 +353,11 @@ public class MobileChannelActivity extends MobileActivity
             return;
         }
 
-        int lastVisible = mLayoutManager.findLastVisibleItemPosition();
+        // Grid positions include the header row, so shift back into card space before comparing.
+        int lastVisible = mLayoutManager.findLastVisibleItemPosition() - headerOffset();
         int itemCount = mAdapter.getItemCount();
 
-        if (lastVisible == RecyclerView.NO_POSITION || itemCount == 0) {
+        if (lastVisible < 0 || itemCount == 0) {
             return;
         }
 
@@ -632,6 +686,56 @@ public class MobileChannelActivity extends MobileActivity
         });
     }
 
+    // ---------------------------------------------------------------------------------
+    // Channel about
+    // ---------------------------------------------------------------------------------
+
+    @Override
+    public void showChannelHeader(ChannelHeader header) {
+        if (header == null) {
+            return;
+        }
+
+        runOnUiThread(() -> {
+            mHeaderAdapter.setHeader(header);
+            applyToolbarTitleAlpha();
+        });
+    }
+
+    @Override
+    public void showChannelAbout(ChannelHeader header) {
+        if (header == null) {
+            return;
+        }
+
+        runOnUiThread(() -> {
+            mFullAbout = header;
+            if (mAboutSheet != null && mAboutSheet.isShowing()) {
+                mAboutSheet.update(header, false);
+            }
+        });
+    }
+
+    /** Header tap / "...more": opens the About sheet, lazily fetching the full panel. */
+    private void onAboutClicked() {
+        if (mPresenter == null || !mHeaderAdapter.hasHeader()
+                || (mAboutSheet != null && mAboutSheet.isShowing())) {
+            return;
+        }
+
+        boolean loading = mFullAbout == null;
+        mAboutSheet = ChannelAboutSheet.show(this,
+                loading ? mHeaderAdapter.getHeader() : mFullAbout, this::openAboutLink, loading);
+
+        if (loading) {
+            mPresenter.loadChannelAbout();
+        }
+    }
+
+    private void openAboutLink(String url) {
+        Utils.openLinkExt(this, url);
+    }
+
     @Override
     public void clear() {
         runOnUiThread(() -> {
@@ -649,6 +753,12 @@ public class MobileChannelActivity extends MobileActivity
             mSuppressTabCallback = false;
             syncLoadMoreFooter();
             mAdapter.submitList(new ArrayList<>());
+            mHeaderAdapter.setHeader(null);
+            mFullAbout = null;
+            if (mAboutSheet != null) {
+                mAboutSheet.dismiss();
+                mAboutSheet = null;
+            }
             hideLoadState();
         });
     }

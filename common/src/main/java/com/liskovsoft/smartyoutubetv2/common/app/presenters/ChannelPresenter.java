@@ -2,6 +2,7 @@ package com.liskovsoft.smartyoutubetv2.common.app.presenters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import com.liskovsoft.mediaserviceinterfaces.data.ChannelHeader;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaGroup;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItem;
 import com.liskovsoft.sharedutils.helpers.Helpers;
@@ -37,6 +38,7 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
     private final List<List<MediaGroup>> mPendingGroups = new ArrayList<>();
     private Disposable mUpdateAction;
     private Disposable mScrollAction;
+    private Disposable mAboutAction;
     private int mSortIdx;
     private Video mChannel;
     /** The running first-page load has put at least one item on screen. */
@@ -194,8 +196,32 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
         mChannel = channel;
     }
 
+    /**
+     * NEWTUBE(channel-about): lazily loads the full About panel (links, artist bio, stats) for the
+     * channel on screen. The channel's first page already carries the short bio.
+     */
+    public void loadChannelAbout() {
+        String channelId = getChannelId();
+
+        if (getView() == null || channelId == null) {
+            return;
+        }
+
+        RxHelper.disposeActions(mAboutAction);
+
+        mAboutAction = getContentService().getChannelAboutObserve(channelId)
+                .subscribe(
+                        header -> {
+                            if (getView() != null && header != null) {
+                                getView().showChannelAbout(header);
+                            }
+                        },
+                        error -> Log.e(TAG, "loadChannelAbout error: %s", error.getMessage())
+                );
+    }
+
     private void disposeActions() {
-        RxHelper.disposeActions(mUpdateAction, mScrollAction);
+        RxHelper.disposeActions(mUpdateAction, mScrollAction, mAboutAction);
         getServiceManager().disposeActions();
         mSortIdx = 0;
         mBrowseProcessor.dispose();
@@ -342,6 +368,18 @@ public class ChannelPresenter extends BasePresenter<ChannelView> implements Vide
         getViewManager().startView(ChannelView.class);
 
         for (MediaGroup mediaGroup : mediaGroups) {
+            if (mediaGroup == null) {
+                continue;
+            }
+
+            // NEWTUBE(channel-about): the channel page's first group carries the author's About
+            // block, not cards - route it to the header instead of the sections.
+            ChannelHeader header = mediaGroup.getChannelHeader();
+            if (header != null) {
+                getView().showChannelHeader(header);
+                continue;
+            }
+
             if (mediaGroup.getMediaItems() == null) {
                 Log.e(TAG, "updateRowsHeader: MediaGroup is empty. Group Name: " + mediaGroup.getTitle());
                 continue;

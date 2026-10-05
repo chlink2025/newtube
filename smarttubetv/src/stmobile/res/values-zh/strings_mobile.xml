@@ -138,6 +138,12 @@
     <!-- Fallback tab label for a channel section the API delivered without a title. -->
     <string name="mobile_channel_tab_videos">视频</string>
 
+    <!-- Channel author's About block and About sheet (ChannelHeaderAdapter/ChannelAboutSheet) -->
+    <string name="mobile_channel_about_more">…更多</string>
+    <string name="mobile_channel_about_description">简介</string>
+    <string name="mobile_channel_about_biography">艺人简介</string>
+    <string name="mobile_channel_about_links">链接</string>
+
     <!-- Bottom-nav "You" tab (account + extra sections + settings) -->
     <string name="mobile_nav_you">你</string>
     <!-- You-tab group label over the discovery feeds (Music, Gaming, News, ...). -->

@@ -1,5 +1,6 @@
 package com.liskovsoft.smartyoutubetv2.common.app.views;
 
+import com.liskovsoft.mediaserviceinterfaces.data.ChannelHeader;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
 import com.liskovsoft.smartyoutubetv2.common.utils.LoadFailure;
 
@@ -8,6 +9,20 @@ public interface ChannelView {
     void setPosition(int index);
     void showProgressBar(boolean show);
     void clear();
+
+    /**
+     * NEWTUBE(channel-about): the author's About block that arrives with the channel page's first
+     * batch, before its sections.
+     */
+    default void showChannelHeader(ChannelHeader header) {
+    }
+
+    /**
+     * NEWTUBE(channel-about): the full About panel (description, stats, links, artist bio),
+     * lazily loaded when the user opens it.
+     */
+    default void showChannelAbout(ChannelHeader header) {
+    }
 
     /**
      * NEWTUBE(page-load-errors): the channel's first load put nothing on screen. {@code state} is a

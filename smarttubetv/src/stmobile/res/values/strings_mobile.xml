@@ -149,6 +149,12 @@
     <!-- Fallback tab label for a channel section the API delivered without a title. -->
     <string name="mobile_channel_tab_videos">Videos</string>
 
+    <!-- Channel author's About block and About sheet (ChannelHeaderAdapter/ChannelAboutSheet) -->
+    <string name="mobile_channel_about_more">…more</string>
+    <string name="mobile_channel_about_description">Description</string>
+    <string name="mobile_channel_about_biography">Biography</string>
+    <string name="mobile_channel_about_links">Links</string>
+
     <!-- Bottom-nav "You" tab (account + extra sections + settings) -->
     <string name="mobile_nav_you">You</string>
     <!-- You-tab group label over the discovery feeds (Music, Gaming, News, ...). -->
