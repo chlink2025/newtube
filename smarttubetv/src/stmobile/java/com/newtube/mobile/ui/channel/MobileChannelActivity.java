@@ -2,8 +2,10 @@ package com.newtube.mobile.ui.channel;
 
 import android.content.res.Configuration;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -14,6 +16,8 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.tabs.TabLayout;
 import com.liskovsoft.mediaserviceinterfaces.data.ChannelHeader;
@@ -28,6 +32,7 @@ import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.newtube.mobile.ui.browse.VideoCardAdapter;
 import com.newtube.mobile.ui.common.FilteredPageTopUp;
 import com.newtube.mobile.ui.common.MobileActivity;
+import com.newtube.mobile.ui.common.Motion;
 import com.newtube.mobile.ui.common.ShortsFilter;
 import com.newtube.mobile.ui.playback.MiniPlayerBridge;
 import com.newtube.mobile.ui.playback.MobileMiniPlayerController;
@@ -82,9 +87,16 @@ public class MobileChannelActivity extends MobileActivity
     private RecyclerView mGrid;
     private GridLayoutManager mLayoutManager;
     private VideoCardAdapter mAdapter;
-    /** NEWTUBE(channel-about): the author's About block, the grid's first (full-span) row. */
-    private ChannelHeaderAdapter mHeaderAdapter;
+    /** NEWTUBE(channel-about): the author's About block, fixed between the toolbar and the tabs. */
+    private View mHeaderContainer;
+    private ImageView mHeaderAvatar;
+    private TextView mHeaderTitle;
+    private TextView mHeaderMeta;
+    private TextView mHeaderDescription;
+    private TextView mHeaderMore;
     private ChannelAboutSheet mAboutSheet;
+    /** NEWTUBE(channel-about): the short About from the channel's first page. */
+    private ChannelHeader mChannelHeader;
     /** NEWTUBE(channel-about): full About once loaded (links, artist bio), null until then. */
     private ChannelHeader mFullAbout;
     private TabLayout mTabs;
@@ -161,83 +173,47 @@ public class MobileChannelActivity extends MobileActivity
         mBackButton = findViewById(R.id.mobile_channel_back);
         mSwipe = findViewById(R.id.mobile_channel_swipe);
         mLoadState = new PageLoadState(findViewById(R.id.mobile_page_load_state), this::retryFirstPage);
+
+        // NEWTUBE(channel-about): the fixed About block above the tabs.
+        mHeaderContainer = findViewById(R.id.mobile_channel_header_container);
+        mHeaderAvatar = findViewById(R.id.mobile_channel_header_avatar);
+        mHeaderTitle = findViewById(R.id.mobile_channel_header_title);
+        mHeaderMeta = findViewById(R.id.mobile_channel_header_meta);
+        mHeaderDescription = findViewById(R.id.mobile_channel_header_description);
+        mHeaderMore = findViewById(R.id.mobile_channel_header_more);
+        mHeaderDescription.setOnClickListener(v -> onAboutClicked());
+        mHeaderMore.setOnClickListener(v -> onAboutClicked());
     }
 
     private void setupGrid() {
         mLayoutManager = new GridLayoutManager(this, computeSpanCount());
         mAdapter = new VideoCardAdapter(this::onVideoClicked, this::onVideoLongClicked);
-        mHeaderAdapter = new ChannelHeaderAdapter(this::onAboutClicked);
         mLoadMoreFooter = new LoadMoreFailureAdapter(this::retryLoadMore);
 
-        // The About header is one full-width row in front of the cards; channel rows (rare here)
-        // span the whole grid width in multi-column layouts, and so does the "Couldn't load more"
-        // row after the cards.
+        // Channel rows (rare here) span the whole grid width in multi-column layouts, and so does
+        // the "Couldn't load more" row after the cards.
         mLayoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
             public int getSpanSize(int position) {
-                return isHeaderPosition(position) || isCardFullSpan(position) || isFooterPosition(position)
+                return position >= mAdapter.getItemCount() || mAdapter.isFullSpan(position)
                         ? mLayoutManager.getSpanCount() : 1;
             }
         });
 
+        mGrid.setHasFixedSize(true);
         mGrid.setItemViewCacheSize(8);
         mGrid.setLayoutManager(mLayoutManager);
-        // NOT setHasFixedSize: the optional header row changes the content height.
-        mGrid.setAdapter(new ConcatAdapter(mHeaderAdapter, mAdapter, mLoadMoreFooter));
+        // Cards first, so grid positions below the footer are card positions.
+        mGrid.setAdapter(new ConcatAdapter(mAdapter, mLoadMoreFooter));
         // Next cards' thumbnails decoded before they scroll in (no grey card + fade on a fling).
-        // Grid positions are shifted by the optional header row.
-        com.newtube.mobile.ui.common.FeedThumbnailPreloader.attach(mGrid, position -> {
-            int card = position - headerOffset();
-            return card >= 0 && card < mAdapter.getItemCount() ? mAdapter.getCurrentList().get(card) : null;
-        });
+        com.newtube.mobile.ui.common.FeedThumbnailPreloader.attach(mGrid, mAdapter);
         mGrid.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 // dy == 0: a layout pass changed the visible range, not the user.
                 maybeTriggerPagination(dy != 0);
-                applyToolbarTitleAlpha();
             }
         });
-    }
-
-    private int headerOffset() {
-        return mHeaderAdapter.hasHeader() ? 1 : 0;
-    }
-
-    private boolean isHeaderPosition(int position) {
-        return position == 0 && mHeaderAdapter.hasHeader();
-    }
-
-    private boolean isCardFullSpan(int position) {
-        int card = position - headerOffset();
-
-        return card >= 0 && card < mAdapter.getItemCount() && mAdapter.isFullSpan(card);
-    }
-
-    private boolean isFooterPosition(int position) {
-        return position >= headerOffset() + mAdapter.getItemCount();
-    }
-
-    /** The channel name is already the biggest thing in the header, so the toolbar copy fades in
-     *  as the header scrolls away (same behaviour as the playlist header). */
-    private void applyToolbarTitleAlpha() {
-        if (!mHeaderAdapter.hasHeader() || mGrid.getVisibility() != View.VISIBLE) {
-            mTitleView.setAlpha(1f);
-            return;
-        }
-
-        View header = mLayoutManager.findViewByPosition(0);
-        float collapsed;
-
-        if (header == null) {
-            collapsed = 1f;
-        } else if (header.getHeight() <= 0) {
-            collapsed = 0f;
-        } else {
-            collapsed = Math.min(1f, Math.max(0f, -header.getTop() / (float) header.getHeight()));
-        }
-
-        mTitleView.setAlpha(Math.max(0f, (collapsed - 0.75f) * 4f));
     }
 
     private void setupTabs() {
@@ -353,11 +329,10 @@ public class MobileChannelActivity extends MobileActivity
             return;
         }
 
-        // Grid positions include the header row, so shift back into card space before comparing.
-        int lastVisible = mLayoutManager.findLastVisibleItemPosition() - headerOffset();
+        int lastVisible = mLayoutManager.findLastVisibleItemPosition();
         int itemCount = mAdapter.getItemCount();
 
-        if (lastVisible < 0 || itemCount == 0) {
+        if (lastVisible == RecyclerView.NO_POSITION || itemCount == 0) {
             return;
         }
 
@@ -697,9 +672,61 @@ public class MobileChannelActivity extends MobileActivity
         }
 
         runOnUiThread(() -> {
-            mHeaderAdapter.setHeader(header);
-            applyToolbarTitleAlpha();
+            mChannelHeader = header;
+            bindChannelHeader(header);
         });
+    }
+
+    private void bindChannelHeader(ChannelHeader header) {
+        mHeaderContainer.setVisibility(View.VISIBLE);
+
+        mHeaderTitle.setText(header.getTitle());
+        mHeaderTitle.setVisibility(TextUtils.isEmpty(header.getTitle()) ? View.GONE : View.VISIBLE);
+
+        String meta = joinMeta(header.getHandle(), header.getSubscriberCount(), header.getVideoCount());
+        mHeaderMeta.setText(meta);
+        mHeaderMeta.setVisibility(TextUtils.isEmpty(meta) ? View.GONE : View.VISIBLE);
+
+        String description = header.getDescription();
+        mHeaderDescription.setText(description);
+        mHeaderDescription.setVisibility(TextUtils.isEmpty(description) ? View.GONE : View.VISIBLE);
+        // Always reachable: the About sheet also carries stats and links a channel may have
+        // without a description.
+        mHeaderMore.setVisibility(View.VISIBLE);
+
+        if (TextUtils.isEmpty(header.getAvatarUrl())) {
+            mHeaderAvatar.setImageResource(R.drawable.ic_watch_channel_placeholder);
+        } else {
+            Glide.with(this)
+                    .load(header.getAvatarUrl())
+                    .circleCrop()
+                    .placeholder(R.drawable.ic_watch_channel_placeholder)
+                    .error(R.drawable.ic_watch_channel_placeholder)
+                    .transition(DrawableTransitionOptions.withCrossFade((int) Motion.FADE_IN_MS))
+                    .into(mHeaderAvatar);
+        }
+    }
+
+    private static String joinMeta(String handle, String subscribers, String videos) {
+        StringBuilder builder = new StringBuilder();
+
+        appendMeta(builder, handle);
+        appendMeta(builder, subscribers);
+        appendMeta(builder, videos);
+
+        return builder.toString();
+    }
+
+    private static void appendMeta(StringBuilder builder, String value) {
+        if (TextUtils.isEmpty(value)) {
+            return;
+        }
+
+        if (builder.length() > 0) {
+            builder.append(" • ");
+        }
+
+        builder.append(value);
     }
 
     @Override
@@ -718,14 +745,14 @@ public class MobileChannelActivity extends MobileActivity
 
     /** Header tap / "...more": opens the About sheet, lazily fetching the full panel. */
     private void onAboutClicked() {
-        if (mPresenter == null || !mHeaderAdapter.hasHeader()
+        if (mPresenter == null || mChannelHeader == null
                 || (mAboutSheet != null && mAboutSheet.isShowing())) {
             return;
         }
 
         boolean loading = mFullAbout == null;
         mAboutSheet = ChannelAboutSheet.show(this,
-                loading ? mHeaderAdapter.getHeader() : mFullAbout, this::openAboutLink, loading);
+                loading ? mChannelHeader : mFullAbout, this::openAboutLink, loading);
 
         if (loading) {
             mPresenter.loadChannelAbout();
@@ -753,8 +780,9 @@ public class MobileChannelActivity extends MobileActivity
             mSuppressTabCallback = false;
             syncLoadMoreFooter();
             mAdapter.submitList(new ArrayList<>());
-            mHeaderAdapter.setHeader(null);
+            mChannelHeader = null;
             mFullAbout = null;
+            mHeaderContainer.setVisibility(View.GONE);
             if (mAboutSheet != null) {
                 mAboutSheet.dismiss();
                 mAboutSheet = null;

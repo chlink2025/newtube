@@ -54,6 +54,14 @@
 
     </LinearLayout>
 
+    <!-- NEWTUBE(channel-about): the author's About block, fixed between the toolbar and the tabs.
+         Populated by showChannelHeader; stays GONE until the channel's first page lands. -->
+    <include
+        android:id="@+id/mobile_channel_header_container"
+        layout="@layout/item_mobile_channel_header"
+        android:visibility="gone"
+        tools:visibility="visible" />
+
     <!-- One tab per channel section, in delivery order. Hidden until sections arrive.
          tabMaxWidth=0 lifts Material's 264dp cap (it wrapped long section names such as
          "WING IT! Production Logs (Pet Projects)" onto two lines); with 0 a scrollable tab
