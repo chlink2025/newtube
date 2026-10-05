@@ -691,15 +691,16 @@
 
                 </LinearLayout>
 
-                <!-- Expandable description (collapsed by default) -->
-                <TextView
+                <!-- Expandable description (collapsed by default). NEWTUBE(link-text): URLs are
+                     tappable via LinkTextView, and a long press copies the whole thing - the old
+                     autoLink + textIsSelectable pair scrolled the page on the long press and
+                     sometimes opened a link instead. -->
+                <com.newtube.mobile.ui.common.LinkTextView
                     android:id="@+id/mobile_watch_description"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
                     android:paddingHorizontal="@dimen/mobile_watch_content_padding"
-                    android:autoLink="web"
-                    android:textIsSelectable="true"
                     android:textColor="@color/mobile_color_on_surface_secondary"
                     android:textColorLink="@color/mobile_color_link"
                     android:textSize="14sp"

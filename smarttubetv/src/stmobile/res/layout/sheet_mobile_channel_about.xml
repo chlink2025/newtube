@@ -68,13 +68,14 @@
                 android:textSize="14sp"
                 android:textStyle="bold" />
 
+            <!-- NEWTUBE(link-text): not selectable - the system editor's focus-follow scrolled the
+                 sheet on the long press; a long press copies the description whole. -->
             <TextView
                 android:id="@+id/mobile_channel_about_description"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="6dp"
                 android:textColor="@color/mobile_color_on_surface_secondary"
-                android:textIsSelectable="true"
                 android:textSize="14sp"
                 tools:text="MKBHD: Quality Tech Videos | YouTuber | Consumer Electronics | Tech Head" />
 

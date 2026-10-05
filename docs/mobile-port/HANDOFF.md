@@ -2375,3 +2375,69 @@ seek bar was rebuilt the way YouTube draws it, with a touch band as wide as YouT
 on YouTube 21.18) that `WatchRootLayout` hit-tests because half of it lies over the page; press
 and hold for 2x keeps the pitch and ends with its video. Details and measurements are in the
 commit messages `8ef63af9`..`d406874a`.
+
+## 38. Comment translation (2026-10-05)
+
+**A comment's Translate pill translates it to the language picked in Settings** (Playback -> Under
+the video -> "Translate comments to"; default = app language). Manual only, per comment, like
+YouTube's own. There is no local translator and no native code involved: the app calls InnerTube
+and shows what comes back.
+
+YouTube's app has no comment-translate code or strings of its own - its comment "Translate" is a
+server-rendered action forwarded verbatim to `comment/perform_comment_action` (decompiled: `akuq`
+get_comments, `akul` perform_comment_action, `akum` action factory; all actions click through the
+same generic dispatcher). The TV renderer NewTube reads carries only like/dislike params, so the
+action is built locally (as with write-comments) from the layout the reference client uses
+(YouTube.js v18.1.0 `ProtoUtils.encodeCommentActionParams` + `CommentView.translate`):
+
+- `comment/perform_comment_action`, body `{"actions":["<urlencoded base64>"]}` (base template the
+  same as delete), TV context.
+- `PeformCommentActionParams` (sic): `{1: 22 (translate), 2: 2, 3: " ", 5: " ", 23: " ",
+  31: {2: " ", 3: {1: {1: text}}, 4: targetLanguage}}`. The verified YouTube.js payload sends blank
+  ids plus `unk_num=2`; `CommentsApiParams.translateCommentParams` mirrors exactly that and keeps
+  the real-id variant (id drops `unk_num`) one flag away if the TV endpoint ever wants it.
+- The text is filtered to letters/numbers/punctuation/separators first (`stripEmojis`); InnerTube
+  answers 400 otherwise (YouTube.js's own workaround).
+- The answer is read loosely: first `commentEntityPayload.translatedContent.content` anywhere
+  under `frameworkUpdates.entityBatchUpdate.mutations` (`CommentTranslateAnswers`); a failed
+  `actionResult` throws `ErrorResponse: <YouTube's words>`. No translated content at all means
+  "nothing to translate" and is treated as a failure with the generic toast.
+- Works signed out: unlike like/write, no auth header and no `checkSignedIn`.
+
+App side: `item_mobile_comment.xml` gained a `comment_translate` pill after Reply; the adapter's
+`Entry` carries `translatedText` / `showingOriginal` / `translating` (translated text is plain -
+no runs, so links come back only with "Show original"), the panel keeps translations per comment
+id for the video's lifetime, applies them to rows born later (a next page, a sort switch) and
+copies the visible text. Request guard is one in-flight translate + the panel's generation number.
+
+Not yet verified on a device (verification runs in the cloud): the first device that tries it
+should confirm the TV context accepts type 22 (a capture from the official app or web is the
+comparison; if the endpoint balks, first try real ids via the params builder, then the WEB context
+for this one call). Also worth checking: whether an already-target-language comment comes back
+without `translatedContent` (currently shows the failure toast) and whether `translatedContent`
+is a Text object rather than `{content: ...}` (the parser accepts both).
+
+## 39. Description copy: textIsSelectable + autoLink is a trap (2026-10-05)
+
+Turn on `android:textIsSelectable="true"` on a TextView inside any scroll container and two
+things happen when the person long-presses to copy:
+
+- The view becomes focusable in touch mode; the ACTION_DOWN focus request makes the parent
+  `NestedScrollView`/`ScrollView` scroll the focused child's **whole drawing rect** into view -
+  the page jumps down by a chunk. Both the watch description (`activity_mobile_playback.xml`)
+  and the channel About description (`sheet_mobile_channel_about.xml`) did this after commit
+  `218d93c0 "make sth could copy"`.
+- With `android:autoLink="web"` also set, `autoLink` installs `LinkMovementMethod` while
+  `textIsSelectable` installs the selection `Editor`; the two race for the gesture and the link
+  under the finger sometimes wins - the browser opened instead of the selection.
+
+Fix: descriptions are deliberately **not selectable**. `LinkTextView`
+(`ui/common/LinkTextView`) renders URLs as `URLSpan`s at `setText` time (the static
+`Linkify.addLinks(Spannable, mask)` overload, so no MovementMethod), routes link taps through a
+`GestureDetector` (the `CommentTextView.spanAt` pattern, opening via `Utils.openLinkExt`), and
+leaves the long press to the owner's `OnLongClickListener`, which copies the whole text
+(`mobile_description_copied`). The channel About description is a plain TextView whose long press
+copies. If partial-selection copy is ever wanted back, do not re-add `textIsSelectable`
+naively - see this section first.
+
+

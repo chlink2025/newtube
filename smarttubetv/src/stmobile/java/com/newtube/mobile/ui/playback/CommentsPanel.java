@@ -37,6 +37,7 @@ import com.liskovsoft.mediaserviceinterfaces.data.CommentItem;
 import com.liskovsoft.mediaserviceinterfaces.oauth.Account;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.sharedutils.rx.RxHelper;
+import com.liskovsoft.smartyoutubetv2.common.prefs.PlayerData;
 import com.liskovsoft.smartyoutubetv2.common.utils.LoadFailure;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.liskovsoft.youtubeapi.service.YouTubeServiceManager;
@@ -76,6 +77,12 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * thread's top comment, "@handle " first when answering a reply) and delete their own. What they
  * post shows at once - on top of the list or the thread, and on top of any order or replies page
  * loaded later - and what they closed without posting stays as a draft until the video changes.</p>
+ *
+ * <p>NEWTUBE(comment-translate): every comment with text carries a Translate pill (the action row,
+ * after Reply). The tap asks YouTube for the translation to the language picked in Settings; the
+ * pill becomes Show original and the row shows the translated text. Translations are remembered by
+ * comment id for as long as the video is on the page, so the two sort orders and a comment's
+ * replies page all show the same state.</p>
  */
 final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayout.Callback,
         CommentComposer.Callback {
@@ -258,6 +265,13 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     private boolean mUiTest;
     @Nullable
     private PopupWindow mCommentMenu;
+
+    // --- NEWTUBE(comment-translate)
+    /** Translated text by comment id, shared by every list showing that comment. */
+    private final Map<String, String> mTranslated = new HashMap<>();
+    /** The translate request in the air; one at a time (its row's pill is held meanwhile). */
+    @Nullable
+    private Disposable mTranslateRequest;
 
     CommentsPanel(FragmentActivity activity, CommentsPanelLayout layout, Host host) {
         mActivity = activity;
@@ -471,6 +485,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         mPostedTop.clear();
         mPostedReplies.clear();
         mDeletedIds.clear();
+        mTranslated.clear();
         mGeneration++;
         mVideoId = videoId;
         mCount = null;
@@ -735,6 +750,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         feed.entries.clear();
         feed.entries.addAll(toEntries(group, feed.replies));
         forgetDeleted(feed.entries);
+        applyTranslations(feed.entries);
         attachPostedReplies(feed.entries);
         // What the person posted here goes first (and only once, if YouTube already lists it).
         List<CommentsAdapter.Entry> posted = postedFor(feed);
@@ -839,6 +855,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
                     feed.emptyPages = more.isEmpty() ? feed.emptyPages + 1 : 0;
                     removeIds(more, postedFor(feed));
                     forgetDeleted(more);
+                    applyTranslations(more);
                     attachPostedReplies(more);
                     // A page of nothing may still carry a token; a few in a row means the end.
                     feed.nextKey = feed.emptyPages >= 3 ? null : nextKey(group, key);
@@ -925,10 +942,12 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     }
 
     private void cancelRequests() {
-        // A post or delete already sent may still land on YouTube; its answer is simply not shown.
-        RxHelper.disposeActions(mPostRequest, mDeleteRequest);
+        // A post, delete or translate already sent may still land on YouTube; its answer is simply
+        // not shown.
+        RxHelper.disposeActions(mPostRequest, mDeleteRequest, mTranslateRequest);
         mPostRequest = null;
         mDeleteRequest = null;
+        mTranslateRequest = null;
         if (mTop != null) {
             mTop.cancel();
         }
@@ -946,6 +965,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
 
     /** Show {@code feed} on the list page as it stands: rows, its failure, or skeletons + a load. */
     private void bindFeedToList(Feed feed, boolean restoreScroll) {
+        applyTranslations(feed.entries); // rows loaded before a translation happened
         if (feed.loaded) {
             if (feed.entries.isEmpty()) {
                 replaceContent(mListAdapter, null, null, feed.entries, 0, CommentsAdapter.FOOTER_NONE);
@@ -1487,7 +1507,9 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
 
     @Override
     public void onCopy(CommentsAdapter.Entry entry) {
-        String text = entry.item.getMessage();
+        // NEWTUBE(comment-translate): what is on screen is what gets copied.
+        String text = entry.translatedText != null && !entry.showingOriginal
+                ? entry.translatedText : entry.item.getMessage();
         if (TextUtils.isEmpty(text)) {
             return;
         }
@@ -1500,6 +1522,60 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         if (Build.VERSION.SDK_INT < 33) {
             MobileSnackbar.show(mActivity, R.string.mobile_comments_copied);
         }
+    }
+
+    // ---------------------------------------------------------------------------------
+    // NEWTUBE(comment-translate)
+    // ---------------------------------------------------------------------------------
+
+    /**
+     * The Translate pill was tapped. A comment already translated flips between the translation
+     * and the original locally; otherwise one request goes out (the pill is held meanwhile) and
+     * the answer is remembered for every row showing this comment.
+     */
+    @Override
+    public void onTranslateClicked(CommentsAdapter.Entry entry) {
+        String id = entry.item.getId();
+        if (mReleased || id == null) {
+            return;
+        }
+        if (entry.translatedText != null) {
+            entry.showingOriginal = !entry.showingOriginal;
+            notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+            return;
+        }
+        String text = entry.item.getMessage();
+        if (mService == null || TextUtils.isEmpty(text) || mTranslateRequest != null || entry.translating) {
+            return;
+        }
+        entry.translating = true;
+        notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+        int generation = mGeneration;
+        mTranslateRequest = mService.translateCommentObserve(text, commentTranslateLanguage()).subscribe(
+                translated -> {
+                    mTranslateRequest = null;
+                    if (generation == mGeneration && !mReleased) {
+                        entry.translating = false;
+                        entry.translatedText = translated;
+                        entry.showingOriginal = false;
+                        mTranslated.put(id, translated);
+                        notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+                    }
+                },
+                error -> {
+                    mTranslateRequest = null;
+                    if (generation == mGeneration && !mReleased) {
+                        entry.translating = false;
+                        notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+                        MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_failed);
+                    }
+                });
+    }
+
+    /** The language picked in Settings; the app language until one is picked. */
+    private String commentTranslateLanguage() {
+        String language = PlayerData.instance(mActivity).getCommentTranslateLanguage();
+        return TextUtils.isEmpty(language) ? Locale.getDefault().getLanguage() : language;
     }
 
     // ---------------------------------------------------------------------------------
@@ -1802,6 +1878,19 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         for (Iterator<CommentsAdapter.Entry> it = entries.iterator(); it.hasNext(); ) {
             if (mDeletedIds.contains(it.next().item.getId())) {
                 it.remove();
+            }
+        }
+    }
+
+    /** NEWTUBE(comment-translate): rows born later (a page, a sort switch) take the state too. */
+    private void applyTranslations(List<CommentsAdapter.Entry> entries) {
+        if (mTranslated.isEmpty()) {
+            return;
+        }
+        for (CommentsAdapter.Entry entry : entries) {
+            String id = entry.item.getId();
+            if (id != null) {
+                entry.translatedText = mTranslated.get(id);
             }
         }
     }

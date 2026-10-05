@@ -1,6 +1,10 @@
 package com.newtube.mobile.ui.channel;
 
 import android.app.Activity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -15,6 +19,7 @@ import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.liskovsoft.mediaserviceinterfaces.data.ChannelHeader;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.newtube.mobile.ui.common.MobileSheets;
+import com.newtube.mobile.ui.common.MobileSnackbar;
 
 import java.util.List;
 
@@ -58,6 +63,12 @@ public final class ChannelAboutSheet {
         mTitle = content.findViewById(R.id.mobile_channel_about_title);
         mDescriptionLabel = content.findViewById(R.id.mobile_channel_about_description_label);
         mDescription = content.findViewById(R.id.mobile_channel_about_description);
+        // NEWTUBE(link-text): not selectable (the system editor scrolled the sheet on the long
+        // press); a long press copies the description whole instead.
+        mDescription.setOnLongClickListener(v -> {
+            copyDescription();
+            return true;
+        });
         mArtistLabel = content.findViewById(R.id.mobile_channel_about_artist_label);
         mArtist = content.findViewById(R.id.mobile_channel_about_artist);
         mLinksLabel = content.findViewById(R.id.mobile_channel_about_links_label);
@@ -174,6 +185,24 @@ public final class ChannelAboutSheet {
             }
 
             mLinks.addView(row);
+        }
+    }
+
+    /** NEWTUBE(link-text): a long press on the description copies it whole, YouTube-style. */
+    private void copyDescription() {
+        CharSequence text = mDescription.getText();
+        if (TextUtils.isEmpty(text)) {
+            return;
+        }
+        Context context = mDialog.getContext();
+        ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard == null) {
+            return;
+        }
+        clipboard.setPrimaryClip(ClipData.newPlainText(context.getString(R.string.mobile_channel_about_description), text));
+        // Android 13+ confirms a copy itself; earlier versions get ours.
+        if (Build.VERSION.SDK_INT < 33) {
+            MobileSnackbar.show(context, R.string.mobile_description_copied);
         }
     }
 

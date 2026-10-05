@@ -91,6 +91,8 @@
     <string name="mobile_watch_queue_from">Reproduciendo de %1$s</string>
     <string name="mobile_watch_queue_fallback">la cola</string>
     <string name="mobile_watch_queue_now_playing">Reproduciendo ahora</string>
+    <!-- NEWTUBE(link-text) -->
+    <string name="mobile_description_copied">Descripción copiada</string>
 
     <!-- Player controls (most are content descriptions read out by TalkBack) -->
     <string name="mobile_player_back">Atrás</string>
@@ -206,6 +208,10 @@
         <item quantity="many">%1$d respuestas</item>
         <item quantity="other">%1$d respuestas</item>
     </plurals>
+    <!-- NEWTUBE(comment-translate) -->
+    <string name="mobile_comments_translate">Traducir</string>
+    <string name="mobile_comments_show_original">Ver original</string>
+    <string name="mobile_comments_translate_failed">No se ha podido traducir el comentario</string>
 
     <!-- Live chat -->
     <string name="mobile_live_chat_entry">Chat en directo</string>

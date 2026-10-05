@@ -188,6 +188,7 @@
     <string name="mobile_settings_dislikes_summary">来自 Return YouTube Dislike，会收到该视频的 ID</string>
     <string name="mobile_settings_paid_promotion">告知付费推广</string>
     <string name="mobile_settings_paid_promotion_summary">视频声明含付费推广时显示一条简短提示</string>
+    <string name="mobile_settings_comment_translate_language">评论翻译为</string>
 
     <!-- Video quality -->
     <string name="mobile_settings_quality_intro">视频开始时的画质。也可在播放器的设置中针对单个视频更改。</string>

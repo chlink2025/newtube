@@ -171,8 +171,35 @@ final class PlayerPages {
         rows.add(SettingsRow.toggle(context.getString(R.string.mobile_settings_paid_promotion),
                 context.getString(R.string.mobile_settings_paid_promotion_summary),
                 sponsorBlock::isPaidContentNotificationEnabled, sponsorBlock::setPaidContentNotificationEnabled));
+        rows.add(commentTranslateLanguage(context, playerData));
 
         return new SettingsPages.Page(context.getString(R.string.mobile_settings_playback), rows);
+    }
+
+    /**
+     * NEWTUBE(comment-translate): the target of each comment's Translate pill. One entry per base
+     * language the system knows, alphabetical by the name shown (the video language picker order).
+     */
+    private static SettingsRow commentTranslateLanguage(Context context, PlayerData playerData) {
+        List<String> codes = new ArrayList<>();
+        for (Locale locale : Locale.getAvailableLocales()) {
+            String code = locale.getLanguage().toLowerCase();
+            if (!code.isEmpty() && !codes.contains(code)) {
+                codes.add(code);
+            }
+        }
+        Collections.sort(codes, (a, b) ->
+                new Locale(a).getDisplayLanguage().compareTo(new Locale(b).getDisplayLanguage()));
+        SettingsRow.Choice<String> choice =
+                SettingsRow.choice(context.getString(R.string.mobile_settings_comment_translate_language));
+        for (String code : codes) {
+            choice.option(new Locale(code).getDisplayLanguage(), code);
+        }
+        return choice.bind(playerData::getCommentTranslateLanguage, playerData::setCommentTranslateLanguage)
+                .summary(() -> {
+                    String current = playerData.getCommentTranslateLanguage();
+                    return current == null ? "" : new Locale(current).getDisplayLanguage();
+                });
     }
 
     private static final int SPEED_PER_CHANNEL = 0;

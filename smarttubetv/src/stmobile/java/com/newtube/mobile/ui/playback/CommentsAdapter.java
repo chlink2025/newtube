@@ -77,6 +77,10 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         void onDeleteClicked(Entry entry);
         /** The signed-in person wrote it: it gets the ⋮ with Delete. */
         boolean isOwnComment(Entry entry);
+
+        // NEWTUBE(comment-translate)
+        /** The Translate / Show original pill of a comment with text. */
+        void onTranslateClicked(Entry entry);
     }
 
     /** One comment and what the person did to it here (their like, whether it is unfolded). */
@@ -90,6 +94,15 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         @Nullable
         String likeCount;
         boolean expanded;
+        /**
+         * NEWTUBE(comment-translate): the text YouTube translated this comment to, null until the
+         * person asks for it; {@code showingOriginal} flips back to {@link #mText} on demand, and
+         * {@code translating} holds the pill while the request is in the air.
+         */
+        @Nullable
+        String translatedText;
+        boolean showingOriginal;
+        boolean translating;
         /**
          * NEWTUBE(write-comments): replies the person posted to it here, newest first. The panel
          * shares one list among every entry of the same comment (Top and Newest each have theirs).
@@ -144,6 +157,7 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int TYPE_COMPOSE = 5;
 
     static final Object PAYLOAD_LIKE = new Object();
+    static final Object PAYLOAD_TRANSLATE = new Object();
     private static final int FOOTER_SKELETONS = 2;
     private static final long ID_LABEL = -2;
     private static final long ID_RETRY = -3;
@@ -520,6 +534,8 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final View mReplies;
         private final TextView mRepliesLabel;
         private final View mReply;
+        private final View mTranslate;
+        private final TextView mTranslateLabel;
         private final View mMore;
         private final int mAvatarPx;
         private final int mHandleColor;
@@ -548,6 +564,8 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mReplies = itemView.findViewById(R.id.comment_replies);
             mRepliesLabel = itemView.findViewById(R.id.comment_replies_label);
             mReply = itemView.findViewById(R.id.comment_reply);
+            mTranslate = itemView.findViewById(R.id.comment_translate);
+            mTranslateLabel = itemView.findViewById(R.id.comment_translate_label);
             mMore = itemView.findViewById(R.id.comment_more);
             mAvatarPx = context.getResources().getDimensionPixelSize(R.dimen.mobile_comment_avatar);
             mHandleColor = ContextCompat.getColor(context, R.color.mobile_color_comment_handle);
@@ -578,6 +596,11 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mReply.setOnClickListener(v -> {
                 if (mEntry != null) {
                     mListener.onReplyClicked(mEntry);
+                }
+            });
+            mTranslate.setOnClickListener(v -> {
+                if (mEntry != null) {
+                    mListener.onTranslateClicked(mEntry);
                 }
             });
             mMore.setOnClickListener(v -> {
@@ -615,11 +638,16 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (entry.mText == null) {
                 entry.mText = buildText(item, mListener, mLinkColor);
             }
-            mMessage.setText(entry.mText);
-            mMessage.setVisibility(TextUtils.isEmpty(entry.mText) ? View.GONE : View.VISIBLE);
+            // NEWTUBE(comment-translate): a translation is plain text (YouTube sends no runs), so
+            // the original's bold runs and links only come back with "Show original".
+            CharSequence text = entry.translatedText != null && !entry.showingOriginal
+                    ? entry.translatedText : entry.mText;
+            mMessage.setText(text);
+            mMessage.setVisibility(TextUtils.isEmpty(text) ? View.GONE : View.VISIBLE);
             mMessage.setExpanded(mIsParent || entry.expanded, false);
 
             bindLike(false);
+            bindTranslate();
 
             boolean replies = !mIsParent && entry.hasReplies();
             mReplies.setVisibility(replies ? View.VISIBLE : View.GONE);
@@ -629,6 +657,19 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mMore.setVisibility(mListener.isOwnComment(entry) ? View.VISIBLE : View.GONE);
 
             loadAvatar(mAvatar, avatarUrl(item.getAuthorPhoto()), mAvatarPx);
+        }
+
+        /** NEWTUBE(comment-translate): the pill's label and its held-while-translating look. */
+        private void bindTranslate() {
+            Entry entry = mEntry;
+            if (entry == null) {
+                return;
+            }
+            mTranslate.setVisibility(TextUtils.isEmpty(entry.item.getMessage()) ? View.GONE : View.VISIBLE);
+            mTranslateLabel.setText(entry.translatedText != null && !entry.showingOriginal
+                    ? R.string.mobile_comments_show_original : R.string.mobile_comments_translate);
+            mTranslate.setEnabled(!entry.translating);
+            mTranslate.setAlpha(entry.translating ? 0.5f : 1f);
         }
 
         /** Like state; {@code animate} = the person just tapped it (pop the thumb, roll the count). */
@@ -813,6 +854,11 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_more,
                             context.getString(R.string.mobile_comments_delete)));
                 }
+                if (!TextUtils.isEmpty(entry.item.getMessage())) {
+                    info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_translate,
+                            context.getString(entry.translatedText != null && !entry.showingOriginal
+                                    ? R.string.mobile_comments_show_original : R.string.mobile_comments_translate)));
+                }
                 if (mMessage.canFold()) {
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_message,
                             context.getString(mMessage.isExpanded()
@@ -837,6 +883,9 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                         return true;
                     } else if (action == R.id.comment_more) {
                         mListener.onDeleteClicked(entry);
+                        return true;
+                    } else if (action == R.id.comment_translate) {
+                        mListener.onTranslateClicked(entry);
                         return true;
                     } else if (action == R.id.comment_message) {
                         boolean expanded = !mMessage.isExpanded();

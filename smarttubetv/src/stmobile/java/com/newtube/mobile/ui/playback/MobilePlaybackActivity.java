@@ -6,6 +6,8 @@ import android.animation.ValueAnimator;
 import android.app.PictureInPictureParams;
 import android.app.RemoteAction;
 import android.content.BroadcastReceiver;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -129,8 +131,10 @@ import com.newtube.mobile.downloads.DownloadRegistry;
 import com.newtube.mobile.SessionWarmup;
 import com.newtube.mobile.ui.common.FrameGate;
 import com.newtube.mobile.ui.common.Haptics;
+import com.newtube.mobile.ui.common.LinkTextView;
 import com.newtube.mobile.ui.common.MagneticDrag;
 import com.newtube.mobile.ui.common.MobileActivity;
+import com.newtube.mobile.ui.common.MobileSnackbar;
 import com.newtube.mobile.ui.common.Motion;
 import com.newtube.mobile.ui.common.ThemeMode;
 import com.newtube.mobile.ui.common.ThemeRefresh;
@@ -256,7 +260,7 @@ public class MobilePlaybackActivity extends MobileActivity
     private TextView mWatchMeta;
     private View mWatchMetaRow;
     private ImageView mWatchExpand;
-    private TextView mWatchDescription;
+    private LinkTextView mWatchDescription;
     private View mWatchLike;
     private ImageView mWatchLikeIcon;
     private TextView mWatchLikeCount;
@@ -722,6 +726,13 @@ public class MobilePlaybackActivity extends MobileActivity
         mWatchMetaRow = findViewById(R.id.mobile_watch_meta_row);
         mWatchExpand = findViewById(R.id.mobile_watch_expand);
         mWatchDescription = findViewById(R.id.mobile_watch_description);
+        // NEWTUBE(link-text): a link opens the app's way; a long press copies the description
+        // whole (it is deliberately not selectable - see LinkTextView).
+        mWatchDescription.setListener(url -> Utils.openLinkExt(this, url));
+        mWatchDescription.setOnLongClickListener(v -> {
+            copyDescription();
+            return true;
+        });
         mWatchLike = findViewById(R.id.mobile_watch_like);
         mWatchLikeIcon = findViewById(R.id.mobile_watch_like_icon);
         mWatchLikeCount = findViewById(R.id.mobile_watch_like_count);
@@ -7548,6 +7559,23 @@ public class MobilePlaybackActivity extends MobileActivity
         // behind a wordy label) are fully readable instead of ellipsized.
         mWatchMeta.setMaxLines(mDescriptionExpanded ? Integer.MAX_VALUE : 1);
         mWatchExpand.animate().rotation(mDescriptionExpanded ? 180f : 0f).setDuration(180).start();
+    }
+
+    /** NEWTUBE(link-text): a long press on the description copies it whole, YouTube-style. */
+    private void copyDescription() {
+        CharSequence text = mWatchDescription.getText();
+        if (TextUtils.isEmpty(text)) {
+            return;
+        }
+        ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+        if (clipboard == null) {
+            return;
+        }
+        clipboard.setPrimaryClip(ClipData.newPlainText(getString(R.string.mobile_watch_description), text));
+        // Android 13+ confirms a copy itself; earlier versions get ours.
+        if (Build.VERSION.SDK_INT < 33) {
+            MobileSnackbar.show(this, R.string.mobile_description_copied);
+        }
     }
 
     /** Route Like / Dislike / Subscribe through the presenter's onButtonClicked vocabulary. */

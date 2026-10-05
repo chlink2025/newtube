@@ -8,6 +8,7 @@
   on a lighter ground (CommentsAdapter.TYPE_PARENT).
   NEWTUBE(write-comments): a Reply button after the like, and a ⋮ at the end of the person's own
   comments (Delete).
+  NEWTUBE(comment-translate): a Translate / Show original pill at the end of the action row.
 -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -202,6 +203,35 @@
                     android:autoMirrored="true"
                     android:contentDescription="@null"
                     android:src="@drawable/ic_chevron_right" />
+
+            </LinearLayout>
+
+            <!-- NEWTUBE(comment-translate): the app translates on tap; the label flips to
+                 "Show original" while the translation is on. -->
+            <LinearLayout
+                android:id="@+id/comment_translate"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="6dp"
+                android:background="@drawable/bg_comment_action"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/comment_translate_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif-medium"
+                    android:maxLines="1"
+                    android:text="@string/mobile_comments_translate"
+                    android:textColor="@color/mobile_color_on_surface"
+                    android:textSize="12sp" />
 
             </LinearLayout>
 
