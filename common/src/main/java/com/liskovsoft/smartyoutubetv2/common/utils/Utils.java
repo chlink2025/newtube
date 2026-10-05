@@ -122,6 +122,18 @@ public class Utils {
             "yt_service_prefs",
             "global_prefs"
     };
+    /**
+     * Files that must never land in a backup, matched by exact base name at any depth.
+     * These are the long-lived login credentials: the YouTube (device-flow) refresh
+     * tokens and the Google/Drive OAuth refresh tokens. Key names mirror
+     * GlobalPreferences MEDIA_SERVICE_ACCOUNT_DATA / OAUTH2_ACCOUNT_DATA (kept as
+     * duplicated strings so no submodule change is needed). Restoring a backup
+     * simply leaves no account behind, so the app starts signed out.
+     */
+    public static final String[] BACKUP_FILE_EXCLUSIONS = {
+            "media_service_account_data",
+            "oauth2_account_data"
+    };
     private static final String SUPER_PASSWD = "smarttube";
     private static final int RANDOM_FAIL_REPEAT_TIMES = 10;
     private static final String REMOTE_CONTROL_RECEIVER_CLASS_NAME = "com.liskovsoft.smartyoutubetv2.common.misc.RemoteControlReceiver";

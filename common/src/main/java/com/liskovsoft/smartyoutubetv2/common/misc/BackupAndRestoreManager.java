@@ -197,7 +197,12 @@ public class BackupAndRestoreManager implements MotherActivity.OnPermissions {
 
         if (mFilesDir.isDirectory() && !FileHelpers.isEmpty(mFilesDir)) {
             File destination = new File(target, mFilesDir.getName());
-            FileHelpers.copy(mFilesDir, destination, null, dir -> Helpers.equalsAny(dir.getName(), Utils.BACKUP_DIRS));
+            // Never back up login credentials: the refresh tokens in global_prefs stay on this device.
+            // A backup without them restores as signed out (or leaves the current login untouched on
+            // a same-device restore, since there is nothing to overwrite it with).
+            FileHelpers.copy(mFilesDir, destination,
+                    file -> !Helpers.equalsAny(file.getName(), Utils.BACKUP_FILE_EXCLUSIONS),
+                    dir -> Helpers.equalsAny(dir.getName(), Utils.BACKUP_DIRS));
         }
     }
 

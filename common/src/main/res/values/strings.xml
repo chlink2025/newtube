@@ -789,7 +789,7 @@
     <string name="local_backup_not_supported">Auto backup on Android TV 11+ is not supported due to system restrictions. Use GDrive instead.</string>
     <string name="rounded_card_corners">Rounded card corners</string>
     <string name="app_restore_desc">NOTE: The backup zip should be copied to this folder manually or in file manager, use \'Open with\'</string>
-    <string name="app_backup_desc">NOTE: The backup will be created in zip format</string>
+    <string name="app_backup_desc">NOTE: The backup will be created in zip format. Accounts are not included and must be signed in again after restore.</string>
     <string name="add_video_to_watch_later">Save to Watch later</string>
     <string name="enable_conscrypt">Enable Conscrypt</string>
     <string name="enable_conscrypt_desc">Improves HTTPS, TLS, and VPN compatibility on some devices, but may occasionally cause playback issues or slower network performance</string>
