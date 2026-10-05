@@ -1,0 +1,72 @@
+name: Build debug
+
+# Daily debugging builds on GitHub's servers, modeled on release.yml.
+#
+# Trigger it by hand from the Actions tab, or with:
+#   gh workflow run debug.yml --ref <branch>
+# It always builds the ref the run itself is on, so to build a branch by hand,
+# run it ON that branch.
+#
+# Differences from release.yml, on purpose:
+# - No `release` environment and no signing secrets. Without keystore.properties
+#   the debug build type falls back to the auto-generated debug key plus the
+#   ".debug" applicationIdSuffix (smarttubetv/build.gradle), so it installs
+#   side by side with the daily driver instead of replacing it.
+# - No Gradle cache either: like a release build, a debug build starts from
+#   nothing another run could have left.
+# - No certificate check, update manifest, attestation or draft release: the
+#   debug key has no stable certificate and nothing is published.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: debug-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      NDK_VERSION: 21.0.6113669   # smarttubetv/build.gradle ndkVersion (strips the .so files)
+    steps:
+      - name: Check out
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          submodules: true
+          persist-credentials: false
+
+      # No Gradle cache on purpose: a debug build starts from nothing another run could have left.
+      - name: Set up JDK 21
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Install the NDK
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" > /dev/null
+
+      - name: Build the debug APKs
+        run: ./gradlew --no-daemon --stacktrace :smarttubetv:assembleStmobileDebug
+
+      - name: Collect the APKs
+        run: |
+          set -euo pipefail
+          mkdir dist
+          cp smarttubetv/build/outputs/renamed_apks/stmobileDebug/NewTube_*.apk dist/
+          ls -l dist
+          (cd dist && sha256sum -- *.apk > SHA256SUMS && cat SHA256SUMS)
+
+      # Also kept when the build fails, to see what was produced.
+      - name: Keep the APKs as a workflow artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: NewTube-debug-${{ github.sha }}
+          if-no-files-found: ignore
+          path: dist/
+          retention-days: 14
