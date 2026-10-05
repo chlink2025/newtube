@@ -2440,4 +2440,17 @@ leaves the long press to the owner's `OnLongClickListener`, which copies the who
 copies. If partial-selection copy is ever wanted back, do not re-add `textIsSelectable`
 naively - see this section first.
 
+## 40. Settings search and CJK queries (2026-10-05)
+
+`SettingsSearch` matches a query word only at a word start (`contains(" " + word)`), with a
+mid-word fallback that needed three letters. CJK text has no spaces and `normalize()` keeps a
+whole Chinese run as one word, so a two-character query that is not at the start of a title
+scored 0: searching 翻译 never found "评论翻译为" (the comment-translation row), and the same
+hit 下方/语言. Fix (`SettingsSearch.hasCjk` + `Entry.score` + `highlight`): a query word with
+Han/Hiragana/Katakana/Hangul and at least two characters may match anywhere in the title, a row's
+keyword aliases, its option labels, its summary and its page path; Latin queries keep the
+three-letter rule so "on" still cannot find "Volume". A new row with a CJK title whose distinctive
+word is not at the start should also get a `KEYWORDS` alias
+(`mobile_settings_search_kw_comment_translate` added for the translate row).
+
 

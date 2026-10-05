@@ -22,6 +22,7 @@
     <string name="mobile_settings_search_kw_natural_voice">音调 语速 声音</string>
     <string name="mobile_settings_search_kw_audio_focus">来电 通知 其他应用 打断</string>
     <string name="mobile_settings_search_kw_hide_related">推荐 相关 接下来播放</string>
+    <string name="mobile_settings_search_kw_comment_translate">翻译 评论 语言</string>
     <string name="mobile_settings_search_kw_dislikes">踩 return youtube dislike ryd</string>
     <string name="mobile_settings_search_kw_quality">分辨率 4k 1080p 720p 高清 省流量 移动数据</string>
     <string name="mobile_settings_search_kw_loudness">音量 均衡 响度 自动</string>

@@ -85,6 +85,7 @@ final class SettingsSearch {
             {R.string.mobile_settings_audio_focus, R.string.mobile_settings_search_kw_audio_focus},
             {R.string.mobile_settings_hide_related, R.string.mobile_settings_search_kw_hide_related},
             {R.string.mobile_settings_dislikes, R.string.mobile_settings_search_kw_dislikes},
+            {R.string.mobile_settings_comment_translate_language, R.string.mobile_settings_search_kw_comment_translate},
             {R.string.mobile_settings_quality, R.string.mobile_settings_search_kw_quality},
             {R.string.mobile_settings_default_quality, R.string.mobile_settings_search_kw_quality},
             {R.string.mobile_settings_loudness, R.string.mobile_settings_search_kw_loudness},
@@ -145,21 +146,25 @@ final class SettingsSearch {
             for (String word : words) {
                 int best = 0;
                 String start = " " + word;
+                // CJK runs have no spaces, so a short Chinese/Japanese/Korean query is usually a
+                // substring of a longer run ("翻译" inside "评论翻译为"): those may match mid-word,
+                // while a Latin query still needs three letters ("on" must not find "Volume").
+                boolean anywhere = word.length() >= 2 && hasCjk(word);
                 if (mTitle.contains(start)) {
                     best = 100;
-                } else if (word.length() >= 3 && mTitle.contains(word)) {
+                } else if ((word.length() >= 3 || anywhere) && mTitle.contains(word)) {
                     best = 50;
                 }
-                if (best < 60 && mKeywords.contains(start)) {
+                if (best < 60 && matches(mKeywords, start, word, anywhere)) {
                     best = 60;
                 }
-                if (best < 35 && mOptions.contains(start)) {
+                if (best < 35 && matches(mOptions, start, word, anywhere)) {
                     best = 35;
                 }
-                if (best < 25 && mSummary.contains(start)) {
+                if (best < 25 && matches(mSummary, start, word, anywhere)) {
                     best = 25;
                 }
-                if (best < 15 && mPath.contains(start)) {
+                if (best < 15 && matches(mPath, start, word, anywhere)) {
                     best = 15;
                 }
                 if (best == 0) {
@@ -174,6 +179,10 @@ final class SettingsSearch {
                 total += 5; // a whole section before a row of it
             }
             return total;
+        }
+
+        private static boolean matches(String haystack, String start, String word, boolean anywhere) {
+            return haystack.contains(start) || (anywhere && haystack.contains(word));
         }
     }
 
@@ -351,7 +360,8 @@ final class SettingsSearch {
                 if (at < 0) {
                     break;
                 }
-                boolean wordStart = at == 0 || !Character.isLetterOrDigit(folded.charAt(at - 1));
+                boolean wordStart = at == 0 || !Character.isLetterOrDigit(folded.charAt(at - 1))
+                        || hasCjk(word);
                 if (wordStart) {
                     result.setSpan(new StyleSpan(Typeface.BOLD), map[0][at], map[0][at + word.length() - 1] + 1,
                             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -388,6 +398,31 @@ final class SettingsSearch {
             out.append(' ');
         }
         return out.toString();
+    }
+
+    /**
+     * A CJK character: Han, Hiragana, Katakana or Hangul. Those scripts run without spaces, so a
+     * short query in them needs the mid-word match a Latin query only gets from three letters
+     * ("on" must not find "Volume"). Code point ranges, not {@code Character.UnicodeScript}
+     * (API 24): the page supports older devices.
+     */
+    private static boolean hasCjk(String text) {
+        for (int i = 0; i < text.length(); ) {
+            int cp = text.codePointAt(i);
+            if ((cp >= 0x3040 && cp <= 0x30FF)        // Hiragana + Katakana
+                    || (cp >= 0x3400 && cp <= 0x4DBF)  // CJK Extension A
+                    || (cp >= 0x4E00 && cp <= 0x9FFF)  // CJK Unified Ideographs
+                    || (cp >= 0xF900 && cp <= 0xFAFF)  // CJK Compatibility Ideographs
+                    || (cp >= 0x20000 && cp <= 0x2FA1F) // Extensions B-F + compatibility supplement
+                    || (cp >= 0x1100 && cp <= 0x11FF)  // Hangul Jamo
+                    || (cp >= 0x3130 && cp <= 0x318F)  // Hangul Compatibility Jamo
+                    || (cp >= 0xA960 && cp <= 0xA97F)  // Hangul Jamo Extended-A
+                    || (cp >= 0xAC00 && cp <= 0xD7AF)) { // Hangul Syllables
+                return true;
+            }
+            i += Character.charCount(cp);
+        }
+        return false;
     }
 
     /** Lower case without accents, the whole string in one pass (the index: speed over alignment). */

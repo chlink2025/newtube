@@ -18,6 +18,7 @@
     <string name="mobile_settings_search_kw_natural_voice">tono voz velocidad</string>
     <string name="mobile_settings_search_kw_audio_focus">llamadas notificaciones otras apps interrupciones</string>
     <string name="mobile_settings_search_kw_hide_related">sugerencias relacionados recomendaciones</string>
+    <string name="mobile_settings_search_kw_comment_translate">traducir traducción comentarios idioma</string>
     <string name="mobile_settings_search_kw_dislikes">no me gusta return youtube dislike ryd</string>
     <string name="mobile_settings_search_kw_quality">resolución 4k 1080p 720p hd ahorro de datos datos móviles</string>
     <string name="mobile_settings_search_kw_loudness">normalizar volumen automático bajo alto</string>
