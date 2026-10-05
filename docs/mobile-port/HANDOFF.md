@@ -2381,7 +2381,9 @@ commit messages `8ef63af9`..`d406874a`.
 **A comment's Translate pill translates it to the language picked in Settings** (Playback -> Under
 the video -> "Translate comments to"; default = app language). Manual only, per comment, like
 YouTube's own. There is no local translator and no native code involved: the app calls InnerTube
-and shows what comes back.
+and shows what comes back. **The feature is off by default** (`PlayerData` slot 64,
+"Translate comments"; the language row greyed until it is on) - the pill only exists while the
+switch is on, and turning it off puts any fetched translation back to the original.
 
 YouTube's app has no comment-translate code or strings of its own - its comment "Translate" is a
 server-rendered action forwarded verbatim to `comment/perform_comment_action` (decompiled: `akuq`
@@ -2398,23 +2400,30 @@ action is built locally (as with write-comments) from the layout the reference c
   the real-id variant (id drops `unk_num`) one flag away if the TV endpoint ever wants it.
 - The text is filtered to letters/numbers/punctuation/separators first (`stripEmojis`); InnerTube
   answers 400 otherwise (YouTube.js's own workaround).
-- The answer is read loosely: first `commentEntityPayload.translatedContent.content` anywhere
-  under `frameworkUpdates.entityBatchUpdate.mutations` (`CommentTranslateAnswers`); a failed
-  `actionResult` throws `ErrorResponse: <YouTube's words>`. No translated content at all means
-  "nothing to translate" and is treated as a failure with the generic toast.
+- The answer is read loosely: every `commentEntityPayload` under
+  `frameworkUpdates.entityBatchUpdate.mutations` is checked for a non-blank
+  `translatedContent.content`, the payload matching the requested comment id first (the translation
+  is not always the first mutation). Only when no translation exists is a failed `actionResult`
+  read as the refusal (`ErrorResponse: <YouTube's words>`); no translation and no failure means
+  YouTube had nothing to translate (`CommentsService.NoTranslationException`, shown as "Nothing to
+  translate", not as a failure).
 - Works signed out: unlike like/write, no auth header and no `checkSignedIn`.
 
 App side: `item_mobile_comment.xml` gained a `comment_translate` pill after Reply; the adapter's
 `Entry` carries `translatedText` / `showingOriginal` / `translating` (translated text is plain -
 no runs, so links come back only with "Show original"), the panel keeps translations per comment
 id for the video's lifetime, applies them to rows born later (a next page, a sort switch) and
-copies the visible text. Request guard is one in-flight translate + the panel's generation number.
+copies the visible text. Requests are tracked per comment id (`Map<String, Disposable>`), so
+tapping several comments in a row translates all of them, each with the panel's generation number
+guarding late answers; a real refusal shows YouTube's words
+(`mobile_comments_translate_failed_reason`). Returning from Settings rebinds the rows if the
+switch changed (`MobilePlaybackActivity.onResume` -> `CommentsPanel.onTranslateSettingChanged`).
 
 Not yet verified on a device (verification runs in the cloud): the first device that tries it
 should confirm the TV context accepts type 22 (a capture from the official app or web is the
 comparison; if the endpoint balks, first try real ids via the params builder, then the WEB context
 for this one call). Also worth checking: whether an already-target-language comment comes back
-without `translatedContent` (currently shows the failure toast) and whether `translatedContent`
+without `translatedContent` (now the "Nothing to translate" note) and whether `translatedContent`
 is a Text object rather than `{content: ...}` (the parser accepts both).
 
 ## 39. Description copy: textIsSelectable + autoLink is a trap (2026-10-05)

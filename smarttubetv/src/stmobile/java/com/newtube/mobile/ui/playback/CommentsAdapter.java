@@ -79,8 +79,9 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         boolean isOwnComment(Entry entry);
 
         // NEWTUBE(comment-translate)
-        /** The Translate / Show original pill of a comment with text. */
+        /** The Translate / Show original pill of a comment with text; off hides it everywhere. */
         void onTranslateClicked(Entry entry);
+        boolean isTranslateEnabled();
     }
 
     /** One comment and what the person did to it here (their like, whether it is unfolded). */
@@ -639,8 +640,10 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 entry.mText = buildText(item, mListener, mLinkColor);
             }
             // NEWTUBE(comment-translate): a translation is plain text (YouTube sends no runs), so
-            // the original's bold runs and links only come back with "Show original".
-            CharSequence text = entry.translatedText != null && !entry.showingOriginal
+            // the original's bold runs and links only come back with "Show original". Feature off:
+            // the original shows even where a translation was already fetched.
+            boolean translateEnabled = mListener.isTranslateEnabled();
+            CharSequence text = translateEnabled && entry.translatedText != null && !entry.showingOriginal
                     ? entry.translatedText : entry.mText;
             mMessage.setText(text);
             mMessage.setVisibility(TextUtils.isEmpty(text) ? View.GONE : View.VISIBLE);
@@ -665,7 +668,8 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (entry == null) {
                 return;
             }
-            mTranslate.setVisibility(TextUtils.isEmpty(entry.item.getMessage()) ? View.GONE : View.VISIBLE);
+            mTranslate.setVisibility(!mListener.isTranslateEnabled() || TextUtils.isEmpty(entry.item.getMessage())
+                    ? View.GONE : View.VISIBLE);
             mTranslateLabel.setText(entry.translatedText != null && !entry.showingOriginal
                     ? R.string.mobile_comments_show_original : R.string.mobile_comments_translate);
             mTranslate.setEnabled(!entry.translating);
@@ -854,7 +858,7 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_more,
                             context.getString(R.string.mobile_comments_delete)));
                 }
-                if (!TextUtils.isEmpty(entry.item.getMessage())) {
+                if (mListener.isTranslateEnabled() && !TextUtils.isEmpty(entry.item.getMessage())) {
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_translate,
                             context.getString(entry.translatedText != null && !entry.showingOriginal
                                     ? R.string.mobile_comments_show_original : R.string.mobile_comments_translate)));

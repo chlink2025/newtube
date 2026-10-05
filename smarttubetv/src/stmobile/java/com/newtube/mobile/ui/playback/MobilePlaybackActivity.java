@@ -1416,6 +1416,12 @@ public class MobilePlaybackActivity extends MobileActivity
     protected void onResume() {
         super.onResume();
 
+        // NEWTUBE(comment-translate): Settings may have flipped the switch while the panel kept
+        // its rows; rebind if it changed.
+        if (mCommentsPanel != null) {
+            mCommentsPanel.onTranslateSettingChanged();
+        }
+
         PlayerTransitionBridge.LaunchSnapshot launch = PlayerTransitionBridge.take();
 
         mIsResumed = true;

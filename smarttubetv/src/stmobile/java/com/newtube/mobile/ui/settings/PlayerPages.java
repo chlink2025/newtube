@@ -171,6 +171,9 @@ final class PlayerPages {
         rows.add(SettingsRow.toggle(context.getString(R.string.mobile_settings_paid_promotion),
                 context.getString(R.string.mobile_settings_paid_promotion_summary),
                 sponsorBlock::isPaidContentNotificationEnabled, sponsorBlock::setPaidContentNotificationEnabled));
+        rows.add(SettingsRow.toggle(context.getString(R.string.mobile_settings_comment_translate),
+                context.getString(R.string.mobile_settings_comment_translate_summary),
+                playerData::isCommentTranslationEnabled, playerData::setCommentTranslationEnabled));
         rows.add(commentTranslateLanguage(context, playerData));
 
         return new SettingsPages.Page(context.getString(R.string.mobile_settings_playback), rows);
@@ -179,6 +182,7 @@ final class PlayerPages {
     /**
      * NEWTUBE(comment-translate): the target of each comment's Translate pill. One entry per base
      * language the system knows, alphabetical by the name shown (the video language picker order).
+     * Greyed out while the feature is off.
      */
     private static SettingsRow commentTranslateLanguage(Context context, PlayerData playerData) {
         List<String> codes = new ArrayList<>();
@@ -196,6 +200,7 @@ final class PlayerPages {
             choice.option(new Locale(code).getDisplayLanguage(), code);
         }
         return choice.bind(playerData::getCommentTranslateLanguage, playerData::setCommentTranslateLanguage)
+                .enabledWhen(playerData::isCommentTranslationEnabled)
                 .summary(() -> {
                     String current = playerData.getCommentTranslateLanguage();
                     return current == null ? "" : new Locale(current).getDisplayLanguage();

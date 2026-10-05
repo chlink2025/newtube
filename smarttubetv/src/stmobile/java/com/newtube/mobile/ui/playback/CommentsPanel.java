@@ -78,11 +78,12 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * post shows at once - on top of the list or the thread, and on top of any order or replies page
  * loaded later - and what they closed without posting stays as a draft until the video changes.</p>
  *
- * <p>NEWTUBE(comment-translate): every comment with text carries a Translate pill (the action row,
- * after Reply). The tap asks YouTube for the translation to the language picked in Settings; the
- * pill becomes Show original and the row shows the translated text. Translations are remembered by
- * comment id for as long as the video is on the page, so the two sort orders and a comment's
- * replies page all show the same state.</p>
+ * <p>NEWTUBE(comment-translate): with the Settings switch on, every comment with text carries a
+ * Translate pill (the action row, after Reply). The tap asks YouTube for the translation to the
+ * language picked in Settings; the pill becomes Show original and the row shows the translated
+ * text. Translations are remembered by comment id for as long as the video is on the page, so the
+ * two sort orders and a comment's replies page all show the same state. Switch off: the pill is
+ * hidden and originals show.</p>
  */
 final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayout.Callback,
         CommentComposer.Callback {
@@ -269,9 +270,10 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     // --- NEWTUBE(comment-translate)
     /** Translated text by comment id, shared by every list showing that comment. */
     private final Map<String, String> mTranslated = new HashMap<>();
-    /** The translate request in the air; one at a time (its row's pill is held meanwhile). */
-    @Nullable
-    private Disposable mTranslateRequest;
+    /** Translate requests in the air by comment id: different comments may translate together. */
+    private final Map<String, Disposable> mTranslateRequests = new HashMap<>();
+    /** The Settings switch as last seen, so returning from Settings can rebind changed rows. */
+    private boolean mTranslateEnabled;
 
     CommentsPanel(FragmentActivity activity, CommentsPanelLayout layout, Host host) {
         mActivity = activity;
@@ -285,6 +287,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
             // No service, no comments: the entry stays hidden without a key anyway.
         }
         mService = service;
+        mTranslateEnabled = isTranslateEnabled();
 
         mTitles = layout.findViewById(R.id.comments_titles);
         mTitleList = layout.findViewById(R.id.comments_title_list);
@@ -601,6 +604,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     public void onPanelOpened() {
         mBackCallback.setEnabled(true);
         mHost.onCommentsPanelShown(true);
+        onTranslateSettingChanged();
     }
 
     void close() {
@@ -944,10 +948,13 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     private void cancelRequests() {
         // A post, delete or translate already sent may still land on YouTube; its answer is simply
         // not shown.
-        RxHelper.disposeActions(mPostRequest, mDeleteRequest, mTranslateRequest);
+        RxHelper.disposeActions(mPostRequest, mDeleteRequest);
         mPostRequest = null;
         mDeleteRequest = null;
-        mTranslateRequest = null;
+        for (Disposable request : mTranslateRequests.values()) {
+            RxHelper.disposeActions(request);
+        }
+        mTranslateRequests.clear();
         if (mTop != null) {
             mTop.cancel();
         }
@@ -1531,12 +1538,13 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     /**
      * The Translate pill was tapped. A comment already translated flips between the translation
      * and the original locally; otherwise one request goes out (the pill is held meanwhile) and
-     * the answer is remembered for every row showing this comment.
+     * the answer is remembered for every row showing this comment. Different comments may
+     * translate at the same time.
      */
     @Override
     public void onTranslateClicked(CommentsAdapter.Entry entry) {
         String id = entry.item.getId();
-        if (mReleased || id == null) {
+        if (mReleased || id == null || !isTranslateEnabled()) {
             return;
         }
         if (entry.translatedText != null) {
@@ -1545,37 +1553,76 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
             return;
         }
         String text = entry.item.getMessage();
-        if (mService == null || TextUtils.isEmpty(text) || mTranslateRequest != null || entry.translating) {
+        if (mService == null || TextUtils.isEmpty(text) || mTranslateRequests.containsKey(id) || entry.translating) {
             return;
         }
         entry.translating = true;
         notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
         int generation = mGeneration;
-        mTranslateRequest = mService.translateCommentObserve(text, commentTranslateLanguage()).subscribe(
-                translated -> {
-                    mTranslateRequest = null;
-                    if (generation == mGeneration && !mReleased) {
-                        entry.translating = false;
-                        entry.translatedText = translated;
-                        entry.showingOriginal = false;
-                        mTranslated.put(id, translated);
-                        notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
-                    }
-                },
-                error -> {
-                    mTranslateRequest = null;
-                    if (generation == mGeneration && !mReleased) {
-                        entry.translating = false;
-                        notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
-                        MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_failed);
-                    }
-                });
+        Disposable request = mService
+                .translateCommentObserve(text, commentTranslateLanguage(), id)
+                .subscribe(
+                        translated -> {
+                            mTranslateRequests.remove(id);
+                            if (generation == mGeneration && !mReleased) {
+                                entry.translating = false;
+                                entry.translatedText = translated;
+                                entry.showingOriginal = false;
+                                mTranslated.put(id, translated);
+                                notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+                            }
+                        },
+                        error -> {
+                            mTranslateRequests.remove(id);
+                            if (generation == mGeneration && !mReleased) {
+                                entry.translating = false;
+                                notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+                                showTranslateFailure(error);
+                            }
+                        });
+        mTranslateRequests.put(id, request);
     }
 
     /** The language picked in Settings; the app language until one is picked. */
     private String commentTranslateLanguage() {
         String language = PlayerData.instance(mActivity).getCommentTranslateLanguage();
         return TextUtils.isEmpty(language) ? Locale.getDefault().getLanguage() : language;
+    }
+
+    @Override
+    public boolean isTranslateEnabled() {
+        return PlayerData.instance(mActivity).isCommentTranslationEnabled();
+    }
+
+    /**
+     * NEWTUBE(comment-translate): the Settings switch changed while the panel kept its rows. The
+     * changed rows bind again; a no-op otherwise.
+     */
+    void onTranslateSettingChanged() {
+        boolean enabled = isTranslateEnabled();
+        if (enabled == mTranslateEnabled) {
+            return;
+        }
+        mTranslateEnabled = enabled;
+        mListAdapter.notifyItemRangeChanged(0, mListAdapter.getItemCount());
+        mRepliesAdapter.notifyItemRangeChanged(0, mRepliesAdapter.getItemCount());
+    }
+
+    /**
+     * YouTube had no translation for the comment: a quiet note, not a failure. A real refusal
+     * shows YouTube's own words; only an unexplained error gets the generic line.
+     */
+    private void showTranslateFailure(Throwable error) {
+        if (error instanceof CommentsService.NoTranslationException) {
+            MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_none);
+            return;
+        }
+        String reason = youTubeReason(error);
+        if (reason != null) {
+            MobileSnackbar.show(mActivity, mActivity.getString(R.string.mobile_comments_translate_failed_reason, reason));
+        } else {
+            MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_failed);
+        }
     }
 
     // ---------------------------------------------------------------------------------

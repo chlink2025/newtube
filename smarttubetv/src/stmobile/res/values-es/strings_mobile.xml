@@ -212,6 +212,8 @@
     <string name="mobile_comments_translate">Traducir</string>
     <string name="mobile_comments_show_original">Ver original</string>
     <string name="mobile_comments_translate_failed">No se ha podido traducir el comentario</string>
+    <string name="mobile_comments_translate_failed_reason">No se ha podido traducir: %1$s</string>
+    <string name="mobile_comments_translate_none">Nada que traducir</string>
 
     <!-- Live chat -->
     <string name="mobile_live_chat_entry">Chat en directo</string>

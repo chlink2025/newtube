@@ -119,6 +119,8 @@
     <string name="mobile_comments_translate">翻译</string>
     <string name="mobile_comments_show_original">显示原文</string>
     <string name="mobile_comments_translate_failed">评论翻译失败</string>
+    <string name="mobile_comments_translate_failed_reason">翻译失败：%1$s</string>
+    <string name="mobile_comments_translate_none">无需翻译</string>
 
     <!-- Live chat panel (bottom sheet) -->
     <string name="mobile_live_chat_entry">实时聊天</string>

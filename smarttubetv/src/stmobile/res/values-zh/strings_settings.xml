@@ -188,6 +188,8 @@
     <string name="mobile_settings_dislikes_summary">来自 Return YouTube Dislike，会收到该视频的 ID</string>
     <string name="mobile_settings_paid_promotion">告知付费推广</string>
     <string name="mobile_settings_paid_promotion_summary">视频声明含付费推广时显示一条简短提示</string>
+    <string name="mobile_settings_comment_translate">翻译评论</string>
+    <string name="mobile_settings_comment_translate_summary">在每条评论下显示翻译按钮</string>
     <string name="mobile_settings_comment_translate_language">评论翻译为</string>
 
     <!-- Video quality -->

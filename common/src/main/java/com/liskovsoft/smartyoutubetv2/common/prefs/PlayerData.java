@@ -90,6 +90,8 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
     private String mSubtitleLanguage;
     /** NEWTUBE(comment-translate): the language comments translate to. */
     private String mCommentTranslateLanguage;
+    /** NEWTUBE(comment-translate): the Translate pill is offered at all (default off). */
+    private boolean mIsCommentTranslationEnabled;
     private boolean mIsAllSpeedEnabled;
     private int mPlaybackMode;
     private float mSleepTimerHours;
@@ -725,6 +727,16 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         persistState();
     }
 
+    /** NEWTUBE(comment-translate): whether the comments offer a Translate pill. */
+    public boolean isCommentTranslationEnabled() {
+        return mIsCommentTranslationEnabled;
+    }
+
+    public void setCommentTranslationEnabled(boolean enabled) {
+        mIsCommentTranslationEnabled = enabled;
+        persistState();
+    }
+
     public float getSleepTimerHours() {
         return mSleepTimerHours;
     }
@@ -932,6 +944,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         mIsVideoFlipEnabled = Helpers.parseBoolean(split, 61, false);
         mIsAudioDelayEnabled = Helpers.parseBoolean(split, 62, false);
         mCommentTranslateLanguage = Helpers.parseStr(split, 63, LocaleUtility.getCurrentLanguage(mPrefs.getContext()));
+        mIsCommentTranslationEnabled = Helpers.parseBoolean(split, 64, false);
 
         if (speeds != null) {
             for (String speedSpec : speeds) {
@@ -969,7 +982,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
                 mIsNumberKeySeekEnabled, mIsSkip24RateEnabled, mAfrPauseMs, mIsLiveChatEnabled, mLastSubtitleFormats, mLastSpeed, mRotationAngle,
                 mZoomPercents, mPlaybackMode, mAudioLanguage, mSubtitleLanguage, mEnabledSubtitlesPerChannel, mIsSubtitlesPerChannelEnabled,
                 mIsSpeedPerChannelEnabled, Helpers.mergeArray(mSpeeds.values().toArray()), mPitch, mIsSkipShortsEnabled, mLastAudioLanguages,
-                mIsVideoFlipEnabled, mIsAudioDelayEnabled, mCommentTranslateLanguage
+                mIsVideoFlipEnabled, mIsAudioDelayEnabled, mCommentTranslateLanguage, mIsCommentTranslationEnabled
         ));
     }
 
