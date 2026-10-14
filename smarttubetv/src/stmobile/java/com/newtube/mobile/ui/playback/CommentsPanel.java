@@ -1619,7 +1619,8 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         }
         String reason = youTubeReason(error);
         if (reason != null) {
-            MobileSnackbar.show(mActivity, mActivity.getString(R.string.mobile_comments_translate_failed_reason, reason));
+            MobileSnackbar.show(mActivity,
+                    mActivity.getString(R.string.mobile_comments_translate_failed_reason, reason), null, null);
         } else {
             MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_failed);
         }
