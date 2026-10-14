@@ -73,7 +73,7 @@
 
 #### 少打扰
 **SponsorBlock** 跳过赞助片段，**DeArrow** 换掉标题党标题和缩略图，
-**Return YouTube Dislike** 显示预估的踩数。没有 Shorts。
+**Return YouTube Dislike** 显示预估的不喜欢数。没有 Shorts。
 
 </td>
 <td valign="top">
@@ -92,7 +92,7 @@ Chromecast（该模式无直播、无字幕），或用电视自带的 YouTube �
 - 视频和手机允许时最高 4K（默认 1080p），可选编码
 - 字幕，含自动翻译轨道，可调字幕样式和大小
 - 0.25x–2x 倍速，步进更细
-- 播放列表：全部播放、随机播放、保存到播放列表、新建播放列表、带“正在播放：…”的队列
+- 播放列表：全部播放、随机播放、保存到播放列表、新建播放列表、带“播放来源：…”的队列
 - 多账号一键切换，也可一个都不用
 - Android 8 及以上支持画中画
 - 滑动手势：上滑进全屏、下滑退出、两侧调亮度和音量、横滑快进快退
@@ -226,7 +226,7 @@ SHA-256 核对每个文件。每个版本都打了 tag，所以能读到精确�
 它只和 YouTube（会看到你看什么，和在哪看一样）、可关闭的社区服务
 （SponsorBlock、DeArrow、Return YouTube Dislike）以及 GitHub 通信。细节见
 [PRIVACY.md](PRIVACY.md)。每项检查和链接，官网的
-[信任与验证](https://newtube.org/#trust）下也有。
+[信任与验证](https://newtube.org/#trust)下也有。
 
 </details>
 
@@ -264,7 +264,7 @@ YouTube 有时会拒绝某个视频或账号。NewTube 会换路重试，但不�
 |:--|:--|:--|
 | [SmartTube](https://github.com/yuliskov/SmartTube) | [@yuliskov](https://github.com/yuliskov) 及贡献者 | 引擎、账号和集成：底下的一切 |
 | [SponsorBlock](https://sponsor.ajay.app) · [DeArrow](https://dearrow.ajay.app) | Ajay Ramachandran 及贡献者 | 片段和标题数据（CC BY-NC-SA 4.0） |
-| [Return YouTube Dislike](https://returnyoutubedislike.com) | RYD 贡献者 | 踩数 |
+| [Return YouTube Dislike](https://returnyoutubedislike.com) | RYD 贡献者 | 不喜欢数 |
 | [androidx Media3](https://developer.android.com/media/media3) | Google（Apache-2.0） | 播放 |
 
 完整声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
@@ -273,8 +273,8 @@ SmartTube 原 README 留在 [docs/UPSTREAM_README_SmartTube.md](docs/UPSTREAM_RE
 ## 翻译
 
 手机界面目前有英语、西班牙语和简体中文（种子翻译）。可以在浏览器里上
-**[Weblate](https://hosted.weblate.org/projects/newtube/)** 参与翻译（WEBLATE-URL-PLACEHOLDER：
-项目获批后页面生效），不用写代码，也不用 GitHub 账号。从 SmartTube 继承的
+**[Weblate](https://hosted.weblate.org/projects/newtube/)** 参与翻译，
+不用写代码，也不用 GitHub 账号。从 SmartTube 继承的
 设置和文案已有约 45 种语言，只需补缺口。Weblate 会把翻译以 PR 发到这里，
 随下一版发布。怎么参与、先译什么：[TRANSLATING.md](TRANSLATING.md)。
 

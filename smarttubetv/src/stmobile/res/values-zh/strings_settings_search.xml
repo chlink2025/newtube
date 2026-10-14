@@ -16,14 +16,14 @@
     <string name="mobile_settings_search_kw_hidden">隐藏 看过 过滤 首播 直播</string>
     <string name="mobile_settings_search_kw_video_menu">菜单 三个点 长按 选项</string>
     <string name="mobile_settings_search_kw_channels_order">订阅 排序 频道</string>
-    <string name="mobile_settings_search_kw_watch_history">暂停 历史 隐身</string>
+    <string name="mobile_settings_search_kw_watch_history">暂停 历史 无痕</string>
     <string name="mobile_settings_search_kw_video_ends">自动播放 重复 循环 随机 下一个</string>
     <string name="mobile_settings_search_kw_background">后台 画中画 音频 最小化</string>
     <string name="mobile_settings_search_kw_natural_voice">音调 语速 声音</string>
     <string name="mobile_settings_search_kw_audio_focus">来电 通知 其他应用 打断</string>
     <string name="mobile_settings_search_kw_hide_related">推荐 相关 接下来播放</string>
     <string name="mobile_settings_search_kw_comment_translate">翻译 评论 语言</string>
-    <string name="mobile_settings_search_kw_dislikes">踩 return youtube dislike ryd</string>
+    <string name="mobile_settings_search_kw_dislikes">不喜欢 踩 return youtube dislike ryd</string>
     <string name="mobile_settings_search_kw_quality">分辨率 4k 1080p 720p 高清 省流量 移动数据</string>
     <string name="mobile_settings_search_kw_loudness">音量 均衡 响度 自动</string>
     <string name="mobile_settings_search_kw_player_volume">音量 声音</string>

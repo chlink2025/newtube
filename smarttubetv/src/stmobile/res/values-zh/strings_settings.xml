@@ -48,7 +48,7 @@
     <string name="mobile_settings_backup">备份和恢复</string>
     <string name="mobile_settings_backup_summary">将设置保存到文件</string>
     <string name="mobile_settings_advanced">高级</string>
-    <string name="mobile_settings_advanced_summary">串流、网络和修复</string>
+    <string name="mobile_settings_advanced_summary">流式传输、网络和修复</string>
     <string name="mobile_settings_about">关于</string>
 
     <!-- General -->
@@ -56,8 +56,8 @@
     <string name="mobile_settings_country">地区</string>
     <string name="mobile_settings_start_screen">启动页</string>
     <string name="mobile_settings_interface_size">界面大小</string>
-    <string name="mobile_settings_voice_search">打开搜索即语音输入</string>
-    <string name="mobile_settings_voice_search_summary">打开搜索即开始聆听</string>
+    <string name="mobile_settings_voice_search">打开搜索时立即语音输入</string>
+    <string name="mobile_settings_voice_search_summary">打开搜索便开始聆听</string>
     <string name="mobile_settings_24_hour">使用 24 小时制</string>
     <string name="mobile_settings_24_hour_summary">用于首播和直播的开始时间</string>
 
@@ -78,7 +78,7 @@
     <string name="mobile_settings_hidden_watched_later">从“稍后观看”中移除看过的视频</string>
     <string name="mobile_settings_hidden_watched_later_summary">看完后将视频从“稍后观看”播放列表中移除</string>
     <string name="mobile_settings_hidden_watched_note">需要使用你的 YouTube 观看记录，因此需要登录。</string>
-    <string name="mobile_settings_hidden_upcoming">即将首播和直播预告</string>
+    <string name="mobile_settings_hidden_upcoming">即将开始的首播和直播</string>
     <string name="mobile_settings_hidden_upcoming_home">在首页隐藏</string>
     <string name="mobile_settings_hidden_upcoming_subscriptions">在订阅内容中隐藏</string>
     <string name="mobile_settings_hidden_upcoming_channels">在频道页隐藏</string>
@@ -98,8 +98,8 @@
     <string name="mobile_settings_menu_playlists">播放列表</string>
     <string name="mobile_settings_menu_tabs">标签页菜单</string>
     <string name="mobile_settings_menu_move_section">上移和下移</string>
-    <string name="mobile_settings_menu_usual_order">常用顺序</string>
-    <string name="mobile_settings_menu_usual_order_summary">将菜单项恢复到常用位置</string>
+    <string name="mobile_settings_menu_usual_order">常规顺序</string>
+    <string name="mobile_settings_menu_usual_order_summary">将菜单项恢复到常规位置</string>
     <string name="mobile_settings_menu_usual_order_done">菜单顺序已恢复</string>
     <string name="mobile_settings_thumbnails">缩略图</string>
     <string name="mobile_settings_thumbnails_default">上传者的缩略图</string>
@@ -112,7 +112,7 @@
     <string name="mobile_settings_channels_order_recent">最近看过的优先</string>
     <string name="mobile_settings_channels_order_name">按名称排序</string>
     <string name="mobile_settings_channels_order_new">有新视频的优先</string>
-    <string name="mobile_settings_pinned_channels">固定的频道打开</string>
+    <string name="mobile_settings_pinned_channels">固定的频道打开后显示</string>
     <string name="mobile_settings_pinned_channels_all">频道主页</string>
     <string name="mobile_settings_pinned_channels_uploads">仅看其视频</string>
     <string name="mobile_settings_playlists_style">“你”中的播放列表</string>
@@ -130,13 +130,13 @@
     <string name="mobile_settings_clear_watch_history">清除观看记录</string>
     <string name="mobile_settings_clear_watch_history_summary">从你的 YouTube 历史记录中删除看过的视频</string>
     <string name="mobile_settings_clear_watch_history_confirm">清除观看记录？</string>
-    <string name="mobile_settings_clear_watch_history_body">YouTube 观看记录中的所有视频都会被移除。此操作无法撤消。</string>
+    <string name="mobile_settings_clear_watch_history_body">YouTube 观看记录中的所有视频都会被移除。此操作无法撤销。</string>
     <string name="mobile_settings_search_history_off">不保留搜索记录</string>
-    <string name="mobile_settings_search_history_off_summary">不再保留或联想过往搜索</string>
+    <string name="mobile_settings_search_history_off_summary">过往搜索不再保留，也不再作为搜索建议</string>
     <string name="mobile_settings_clear_search_history">清除搜索记录</string>
     <string name="mobile_settings_clear_search_history_summary">删除保存在本手机上的搜索</string>
     <string name="mobile_settings_clear_search_history_confirm">清除搜索记录？</string>
-    <string name="mobile_settings_clear_search_history_body">NewTube 保存在本手机上的搜索会被删除。此操作无法撤消。</string>
+    <string name="mobile_settings_clear_search_history_body">NewTube 保存在本手机上的搜索会被删除。此操作无法撤销。</string>
 
     <!-- Backup -->
     <string name="mobile_settings_backup_now">立即备份</string>
@@ -152,9 +152,9 @@
     <string name="mobile_settings_video_ends">视频播完后</string>
     <string name="mobile_settings_video_ends_next">播放下一个视频</string>
     <string name="mobile_settings_video_ends_repeat">重复播放本视频</string>
-    <string name="mobile_settings_video_ends_shuffle">随机播放播放列表</string>
+    <string name="mobile_settings_video_ends_shuffle">随机播放列表中的视频</string>
     <string name="mobile_settings_video_ends_list">播完播放列表后停止</string>
-    <string name="mobile_settings_video_ends_reverse">倒序播放播放列表</string>
+    <string name="mobile_settings_video_ends_reverse">倒序播放列表中的视频</string>
     <string name="mobile_settings_video_ends_pause">暂停</string>
     <string name="mobile_settings_video_ends_close">关闭播放器</string>
     <string name="mobile_settings_background">离开应用时</string>
@@ -179,14 +179,14 @@
     <string name="mobile_settings_resume">继续播放</string>
     <string name="mobile_settings_resume_short">短视频也继续播放</string>
     <string name="mobile_settings_resume_short_summary">6 分钟以下的视频默认从头播放，开启后会接着上次看</string>
-    <string name="mobile_settings_resume_live">直播也接着看</string>
+    <string name="mobile_settings_resume_live">直播续播</string>
     <string name="mobile_settings_resume_live_summary">从上次离开的位置继续看直播，而非跳到直播点</string>
     <string name="mobile_settings_watch_page">视频下方</string>
     <string name="mobile_settings_hide_related">隐藏“接下来播放”</string>
     <string name="mobile_settings_hide_related_summary">不再显示播放器下方的相关视频</string>
-    <string name="mobile_settings_dislikes">显示踩的数量</string>
+    <string name="mobile_settings_dislikes">显示不喜欢数量</string>
     <string name="mobile_settings_dislikes_summary">来自 Return YouTube Dislike，会收到该视频的 ID</string>
-    <string name="mobile_settings_paid_promotion">告知付费推广</string>
+    <string name="mobile_settings_paid_promotion">付费推广提示</string>
     <string name="mobile_settings_paid_promotion_summary">视频声明含付费推广时显示一条简短提示</string>
     <string name="mobile_settings_comment_translate">翻译评论</string>
     <string name="mobile_settings_comment_translate_summary">在每条评论下显示翻译按钮</string>
@@ -230,49 +230,49 @@
     <string name="mobile_settings_segment_min">短于此时长的片段不跳过</string>
     <string name="mobile_settings_segment_once">每个片段只跳过一次</string>
     <string name="mobile_settings_segment_once_summary">回退到跳过的片段时会正常播放</string>
-    <string name="mobile_settings_segment_alt_server_summary">若片段加载不出来可试试</string>
+    <string name="mobile_settings_segment_alt_server_summary">若片段不再加载，可试试这个</string>
     <string name="mobile_settings_segment_alt_server">使用备用服务器</string>
 
     <!-- DeArrow -->
     <string name="mobile_settings_dearrow_titles">更好的标题</string>
-    <string name="mobile_settings_dearrow_titles_summary">用社区编写的标题替换标题党</string>
+    <string name="mobile_settings_dearrow_titles_summary">用社区编写的标题替换标题党式的标题</string>
     <string name="mobile_settings_dearrow_thumbnails">更好的缩略图</string>
     <string name="mobile_settings_dearrow_thumbnails_summary">用社区挑选的画面替换缩略图</string>
     <string name="mobile_settings_dearrow_note">DeArrow 会收到你在列表中看到的视频的 ID。</string>
 
     <!-- Advanced -->
-    <string name="mobile_settings_advanced_note">大多数人用不到这些。它们会改变 NewTube 的串流和连接方式。</string>
-    <string name="mobile_settings_streaming">串流</string>
+    <string name="mobile_settings_advanced_note">大多数人用不到这些。它们会改变 NewTube 的流式传输和连接方式。</string>
+    <string name="mobile_settings_streaming">流式传输</string>
     <string name="mobile_settings_video_format">视频格式</string>
     <string name="mobile_settings_buffer">缓冲</string>
-    <string name="mobile_settings_buffer_low_desc">预载约 25 秒。占用内存最少</string>
-    <string name="mobile_settings_buffer_med_desc">预载约 50 秒</string>
-    <string name="mobile_settings_buffer_high_desc">预载最多 75 秒</string>
-    <string name="mobile_settings_buffer_highest_desc">预载最多 2 分钟。占用内存最多</string>
+    <string name="mobile_settings_buffer_low_desc">提前缓冲约 25 秒。占用内存最少</string>
+    <string name="mobile_settings_buffer_med_desc">提前缓冲约 50 秒</string>
+    <string name="mobile_settings_buffer_high_desc">提前缓冲最多 75 秒</string>
+    <string name="mobile_settings_buffer_highest_desc">提前缓冲最多 2 分钟。占用内存最多</string>
     <string name="mobile_settings_stall_quality">一直缓冲时降低画质</string>
     <string name="mobile_settings_stall_quality_summary">缓冲约 20 秒后降一档画质。用 VPN 时关闭可能有帮助</string>
     <string name="mobile_settings_high_bitrate">高码率格式</string>
-    <string name="mobile_settings_high_bitrate_summary">有高码率 1080p 的视频会多出这些选项。需要一次额外请求</string>
-    <string name="mobile_settings_sabr">使用 SABR 串流（实验性）</string>
-    <string name="mobile_settings_sabr_summary">YouTube 的新串流协议，从下一个视频开始生效。稍省流量</string>
-    <string name="mobile_settings_legacy_codecs">单文件串流</string>
-    <string name="mobile_settings_legacy_codecs_summary">播放老式单文件串流，通常 360p，不可切换画质。仅适合很慢的手机</string>
+    <string name="mobile_settings_high_bitrate_summary">视频支持时，会加入 YouTube 的高码率 1080p 流。需要一次额外请求</string>
+    <string name="mobile_settings_sabr">使用 SABR 流式播放（实验性）</string>
+    <string name="mobile_settings_sabr_summary">YouTube 较新的流式传输协议，从下一个视频开始生效。稍省流量</string>
+    <string name="mobile_settings_legacy_codecs">单文件流</string>
+    <string name="mobile_settings_legacy_codecs_summary">播放旧式单文件流，通常 360p，不可切换画质。仅适合很慢的手机</string>
     <string name="mobile_settings_live">直播</string>
     <string name="mobile_settings_live_edge">从直播点开始</string>
     <string name="mobile_settings_live_edge_summary">尽量播得和直播同步，不保留 15 秒延迟</string>
     <string name="mobile_settings_live_hls">用 HLS 播放直播</string>
     <string name="mobile_settings_live_hls_summary">慢手机上可能更流畅。无法回看，画质最高 1080p</string>
     <string name="mobile_settings_player">播放器</string>
-    <string name="mobile_settings_controls_on_next">下一个视频显示控制栏</string>
+    <string name="mobile_settings_controls_on_next">在下一个视频中显示控制栏</string>
     <string name="mobile_settings_controls_on_next_summary">下一个视频开始时显示控制栏</string>
-    <string name="mobile_settings_list_queue">播放来时的列表</string>
-    <string name="mobile_settings_list_queue_summary">从播放列表打开的视频会按所见顺序接着播</string>
+    <string name="mobile_settings_list_queue">播放来源列表</string>
+    <string name="mobile_settings_list_queue_summary">从播放列表打开的视频，会按你看到时的顺序接着播放</string>
     <string name="mobile_settings_queue_mode">队列跟随“视频播完后”</string>
     <string name="mobile_settings_queue_mode_summary">设为暂停或关闭播放器时，队列也会停</string>
     <string name="mobile_settings_chapter_popup">章节弹窗</string>
     <string name="mobile_settings_chapter_popup_summary">每章开始时显示章节名。点按可跳到下一章</string>
     <string name="mobile_settings_network">网络</string>
-    <string name="mobile_settings_proxy">网页代理</string>
+    <string name="mobile_settings_proxy">网络代理</string>
     <string name="mobile_settings_proxy_summary">让 NewTube 的流量经 HTTP 或 SOCKS 代理</string>
     <string name="mobile_settings_dns">查找 YouTube 服务器</string>
     <string name="mobile_settings_dns_ipv4">优先 IPv4</string>

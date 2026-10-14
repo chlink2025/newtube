@@ -24,7 +24,7 @@
     <string name="mobile_playlist_shuffle">随机播放</string>
     <!-- Shown after Shuffle, because it also turns the player's repeat mode to shuffle -->
     <!-- Pinch-zoom hint chip, same copy as the YouTube app -->
-    <string name="mobile_player_zoom_fill">已放大至全屏</string>
+    <string name="mobile_player_zoom_fill">已放大以填满</string>
     <string name="mobile_player_zoom_original">原始尺寸</string>
 
     <!-- Player gear bottom-sheet menu -->
@@ -37,7 +37,7 @@
     <string name="mobile_menu_shuffle">随机播放</string>
     <string name="mobile_menu_zoom">缩放</string>
     <string name="mobile_menu_background">后台播放</string>
-    <string name="mobile_menu_stats">详细统计信息</string>
+    <string name="mobile_menu_stats">统计信息</string>
     <string name="mobile_menu_playlist_add">保存到播放列表</string>
     <string name="mobile_menu_queue">播放队列</string>
     <string name="mobile_menu_on">开</string>
@@ -59,9 +59,9 @@
     <string name="mobile_watch_subscribed">已订阅</string>
     <string name="mobile_watch_related">接下来播放</string>
     <!-- In place of "Up next" when nothing loaded because there is no network (e.g. a download). -->
-    <string name="mobile_watch_offline">已离线</string>
+    <string name="mobile_watch_offline">你已离线</string>
     <!-- Queue card. "%1$s" is the playlist/queue name; the position line is "3 / 48". -->
-    <string name="mobile_watch_queue_from">正在播放：%1$s</string>
+    <string name="mobile_watch_queue_from">播放来源：%1$s</string>
     <string name="mobile_watch_queue_fallback">播放队列</string>
     <string name="mobile_watch_queue_now_playing">正在播放</string>
     <string name="mobile_watch_description">简介</string>
@@ -77,7 +77,7 @@
     <string name="mobile_comments_load_error">评论加载失败。</string>
     <string name="mobile_comments_replies_load_error">回复加载失败。</string>
     <string name="mobile_comments_sort_top">热门</string>
-    <string name="mobile_comments_sort_top_hint">按点赞数排序</string>
+    <string name="mobile_comments_sort_top_hint">点赞最多的在前</string>
     <string name="mobile_comments_sort_newest">最新</string>
     <string name="mobile_comments_sort_newest_hint">可能包含垃圾内容</string>
     <string name="mobile_comments_sort_description">评论排序方式：%1$s</string>
@@ -88,13 +88,13 @@
     <string name="mobile_comments_open_replies">展开回复</string>
     <string name="mobile_comments_copy">复制评论</string>
     <string name="mobile_comments_copied">评论已复制</string>
-    <string name="mobile_comments_like">赞评论</string>
-    <string name="mobile_comments_unlike">取消赞</string>
-    <string name="mobile_comments_liked">已赞</string>
-    <string name="mobile_comments_sign_in_to_like">登录后即可赞评论</string>
+    <string name="mobile_comments_like">点赞评论</string>
+    <string name="mobile_comments_unlike">取消点赞</string>
+    <string name="mobile_comments_liked">已点赞</string>
+    <string name="mobile_comments_sign_in_to_like">登录后即可为评论点赞</string>
     <!-- NEWTUBE(write-comments) -->
-    <string name="mobile_comments_add_hint">写条评论…</string>
-    <string name="mobile_comments_reply_hint">写条回复…</string>
+    <string name="mobile_comments_add_hint">添加评论…</string>
+    <string name="mobile_comments_reply_hint">添加回复…</string>
     <string name="mobile_comments_reply">回复</string>
     <string name="mobile_comments_post">发布</string>
     <string name="mobile_comments_posted">评论已发布</string>
@@ -108,7 +108,7 @@
     <string name="mobile_comments_delete">删除</string>
     <string name="mobile_comments_delete_title">删除评论？</string>
     <string name="mobile_comments_delete_reply_title">删除回复？</string>
-    <string name="mobile_comments_delete_message">所有人都将看不到这条内容。</string>
+    <string name="mobile_comments_delete_message">所有人都将无法再看到这条内容。</string>
     <string name="mobile_comments_delete_cancel">取消</string>
     <string name="mobile_comments_deleted">评论已删除</string>
     <string name="mobile_comments_delete_failed">评论删除失败</string>
@@ -120,7 +120,7 @@
     <string name="mobile_comments_show_original">显示原文</string>
     <string name="mobile_comments_translate_failed">评论翻译失败</string>
     <string name="mobile_comments_translate_failed_reason">翻译失败：%1$s</string>
-    <string name="mobile_comments_translate_none">无需翻译</string>
+    <string name="mobile_comments_translate_none">没有可翻译的内容</string>
 
     <!-- Live chat panel (bottom sheet) -->
     <string name="mobile_live_chat_entry">实时聊天</string>
@@ -137,7 +137,7 @@
     <string name="mobile_search_button">搜索</string>
     <string name="mobile_search_voice">语音搜索</string>
     <!-- The NW arrow on a suggestion row: puts the text into the field without searching. -->
-    <string name="mobile_search_insert">填入搜索框</string>
+    <string name="mobile_search_insert">完善此搜索</string>
     <string name="mobile_search_clear">清除搜索</string>
     <!-- Zero-result / failed search (the two are indistinguishable at this seam); tap = retry. -->
     <!-- SearchLoadState: an honest empty answer (no retry), and a failed search. -->
@@ -182,7 +182,7 @@
     <string name="mobile_captions_off">关闭字幕</string>
     <string name="mobile_captions_empty">此视频没有字幕</string>
     <string name="mobile_captions_style">字幕样式和大小</string>
-    <string name="mobile_captions_on_toast">字幕已开启 (%1$s)</string>
+    <string name="mobile_captions_on_toast">字幕已开启（%1$s）</string>
     <string name="mobile_captions_off_toast">字幕已关闭</string>
 
     <!-- Speed sheet (sheet_mobile_speed / showSpeedSheet) -->
@@ -212,7 +212,7 @@
 
     <!-- Accounts sheet (com.newtube.mobile.ui.browse.AccountsSheet) -->
     <string name="mobile_accounts_title">账号</string>
-    <string name="mobile_accounts_signed_out">不使用账号</string>
+    <string name="mobile_accounts_signed_out">不登录使用</string>
     <string name="mobile_accounts_sign_out">退出登录</string>
     <string name="mobile_accounts_sign_out_title">确定要退出登录吗？</string>
     <string name="mobile_accounts_sign_out_confirm">%1$s 将从此设备中移除。你可以随时重新登录。</string>
@@ -230,7 +230,7 @@
     <!-- Overrides common's all-caps TV label ("SIGN IN") on the sign-in-gated empty state. -->
     <string name="action_signin" tools:ignore="ExtraTranslation">登录</string>
     <string name="mobile_empty_generic">这里暂时没有内容</string>
-    <string name="mobile_empty_subscriptions">你订阅的频道的视频会显示在这里</string>
+    <string name="mobile_empty_subscriptions">你订阅的频道发布的视频会显示在这里</string>
     <!-- Same empty state, but the device has no working network: say so instead of blaming the feed. -->
     <string name="mobile_empty_no_connection">无网络连接。请检查网络后重试。</string>
     <!-- Channel / uploads / playlist pages (MobileChannel*Activity): the first page failed with a
@@ -264,7 +264,7 @@
     <string name="mobile_settings_gestures">手势</string>
     <string name="mobile_settings_gesture_levels">滑动调节亮度和音量</string>
     <string name="mobile_settings_gesture_levels_summary">在全屏视频左右两侧上下滑动</string>
-    <string name="mobile_settings_gesture_seek">滑动快进快退</string>
+    <string name="mobile_settings_gesture_seek">滑动跳转进度</string>
     <string name="mobile_settings_gesture_seek_summary">在视频上横向滑动</string>
     <!-- Default-locale twins of the values-es overrides below (lint ExtraTranslation). -->
     <string name="subscribed_to_channel">已订阅</string>
@@ -292,7 +292,7 @@
     <!-- Chooser header for a Cast device offering both modes; tapping it goes back to the list. -->
     <string name="mobile_cast_chooser_title">投屏到%1$s</string>
     <!-- Chooser option 1 (default, listed first): Route A. Subtitle carries the one real cost. -->
-    <string name="mobile_cast_option_direct_title">快速投屏</string>
+    <string name="mobile_cast_option_direct_title">直接投屏</string>
     <string name="mobile_cast_option_direct_subtitle">在手机上控制画质 · 无字幕</string>
     <!-- Chooser option 2: Lounge via saved screen or the mdx shim. -->
     <string name="mobile_cast_option_app_title">通过电视应用播放</string>
@@ -301,9 +301,9 @@
     <string name="mobile_cast_connecting_youtube_app">正在连接电视上的 YouTube 应用…</string>
     <!-- Route A load refusals: the session stays up, only this video can't be direct-cast. -->
     <string name="mobile_cast_direct_live_unsupported">直播需要在电视上使用 YouTube 或 SmartTube</string>
-    <string name="mobile_cast_direct_incompatible">此视频无法快速投屏（没有电视可播放的格式）</string>
-    <string name="mobile_cast_direct_load_failed">无法为快速投屏准备此视频</string>
-    <string name="mobile_cast_direct_no_wifi">快速投屏需要手机和电视连接同一 Wi-Fi</string>
+    <string name="mobile_cast_direct_incompatible">此视频无法直接投屏（没有电视可播放的格式）</string>
+    <string name="mobile_cast_direct_load_failed">无法为直接投屏准备此视频</string>
+    <string name="mobile_cast_direct_no_wifi">直接投屏需要手机和电视连接同一 Wi-Fi</string>
     <string name="mobile_cast_link_code">使用电视代码关联</string>
     <string name="mobile_cast_link_code_subtitle">支持 YouTube 和 SmartTube</string>
     <string name="mobile_cast_code_hint">12 位代码</string>
@@ -326,18 +326,18 @@
     <!-- Shown until the Lounge sender lands in the MediaServiceCore fork. -->
     <string name="mobile_cast_unavailable">此版本暂不支持投屏</string>
     <!-- Player overlay + cast notification title: "Playing on Living room TV". -->
-    <string name="mobile_cast_playing_on">正在%1$s上播放</string>
+    <string name="mobile_cast_playing_on">正在 %1$s 上播放</string>
     <string name="mobile_cast_disconnect">断开连接</string>
     <string name="mobile_cast_channel_name">投屏</string>
     <string name="mobile_cast_channel_desc">电视投屏会话的控制</string>
     <!-- Volume-key routing while a session is connected: lightweight toast indicator. -->
     <string name="mobile_cast_fallback_switching">正在尝试电视上的 YouTube…</string>
     <string name="mobile_cast_trying_smarttube">正在尝试电视上的 SmartTube…</string>
-    <string name="mobile_cast_trying_direct">正在尝试快速投屏…</string>
+    <string name="mobile_cast_trying_direct">正在尝试直接投屏…</string>
     <string name="mobile_cast_trying_saved">正在尝试已保存的电视应用…</string>
     <string name="mobile_cast_checking_ad_free">正在检查电视…</string>
     <string name="mobile_cast_smarttube_title">SmartTube</string>
-    <string name="mobile_cast_smarttube_subtitle">SmartTube · 手机可以离开</string>
+    <string name="mobile_cast_smarttube_subtitle">SmartTube · 手机可随身带走</string>
     <string name="mobile_cast_youtube_title">YouTube</string>
     <string name="mobile_cast_youtube_subtitle">YouTube · 备用</string>
     <string name="mobile_cast_unknown_title">已保存的电视应用</string>
@@ -347,11 +347,11 @@
     <string name="mobile_cast_onboarding_body">关联一次，你投屏的视频就会在 SmartTube 中打开。</string>
     <string name="mobile_cast_pair_smarttube">关联 SmartTube</string>
     <string name="mobile_cast_receiver_no_playback">电视应用未开始播放</string>
-    <string name="mobile_cast_switching_tv_app">正在电视上打开 YouTube 控制…</string>
+    <string name="mobile_cast_switching_tv_app">正在电视上打开 YouTube 控制界面…</string>
     <string name="mobile_cast_choose_method">选择投屏方式</string>
     <string name="mobile_cast_more_options">电视播放选项</string>
     <string name="mobile_cast_controls_title">电视播放选项</string>
-    <string name="mobile_cast_direct_summary">快速投屏 · 在本手机上控制画质 · 字幕需要电视应用</string>
+    <string name="mobile_cast_direct_summary">直接投屏 · 在本手机上控制画质 · 字幕需要电视应用</string>
     <string name="mobile_cast_app_summary">电视应用 · 在本手机上控制字幕 · 用电视遥控器控制画质</string>
     <string name="mobile_cast_quality_auto_1080">自动（最高 1080p）</string>
     <string name="mobile_cast_quality_cap">最高 %1$dp</string>
@@ -359,7 +359,7 @@
     <string name="mobile_cast_subtitles_need_tv_app">切换到电视应用</string>
     <string name="mobile_cast_quality_receiver_help">请在电视播放器的设置中选择画质。</string>
     <string name="mobile_cast_subtitles_sent">字幕选择已发送到电视</string>
-    <string name="mobile_cast_subtitles_failed">无法在此接收器上更改字幕</string>
+    <string name="mobile_cast_subtitles_failed">无法在此接收端更改字幕</string>
     <string name="mobile_cast_switch_subtitles_title">改用电视应用显示字幕吗？</string>
     <string name="mobile_cast_switch_subtitles_message">电视应用支持字幕，并可用电视遥控器选择画质。我们会先尝试已配对的 SmartTube，再尝试 YouTube。</string>
     <string name="mobile_cast_switch_subtitles_positive">切换</string>
@@ -367,16 +367,16 @@
 
     <!-- Downloads -->
     <!-- Watch-page confirmations (WatchActionFeedback) -->
-    <string name="mobile_sign_in_to_rate">登录后即可赞或踩视频</string>
+    <string name="mobile_sign_in_to_rate">登录后即可喜欢或不喜欢视频</string>
     <string name="mobile_subscribed_to">已订阅%1$s</string>
     <string name="mobile_unsubscribed_from">已取消订阅%1$s</string>
     <string name="mobile_subscribed">已订阅</string>
     <string name="mobile_unsubscribed">已取消订阅</string>
-    <string name="mobile_undo">撤消</string>
+    <string name="mobile_undo">撤销</string>
     <string name="mobile_liked">已添加到喜欢的视频</string>
     <string name="mobile_like_removed">已从喜欢的视频中移除</string>
-    <string name="mobile_disliked">你踩了此视频</string>
-    <string name="mobile_dislike_removed">已取消踩</string>
+    <string name="mobile_disliked">你不喜欢此视频</string>
+    <string name="mobile_dislike_removed">已取消不喜欢</string>
     <string name="mobile_rate_not_ready">视频仍在加载中。请稍后再试。</string>
     <string name="mobile_rating_not_saved">未能保存你的评分。请检查网络连接后重试。</string>
     <string name="mobile_download_started">下载已开始</string>
@@ -457,8 +457,8 @@
 
     <!-- NEWTUBE(about-growth): the last two rows of Settings > About. Tap-only: no prompt, badge
          or counter. Never "ad-free" wording. -->
-    <string name="mobile_about_star">在 GitHub 上为 NewTube 加星</string>
-    <string name="mobile_about_star_desc">免费开源。加星可帮助更多人发现它</string>
+    <string name="mobile_about_star">在 GitHub 上为 NewTube 标星</string>
+    <string name="mobile_about_star_desc">免费开源。标星可帮助更多人发现它</string>
     <string name="mobile_about_share">分享 NewTube</string>
     <string name="mobile_about_share_desc">把链接发送给可能喜欢它的人</string>
     <string name="mobile_about_share_text">NewTube——基于 SmartTube 的手机 YouTube 客户端：%1$s</string>
