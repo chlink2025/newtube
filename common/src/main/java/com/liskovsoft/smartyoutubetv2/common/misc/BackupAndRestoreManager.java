@@ -189,7 +189,8 @@ public class BackupAndRestoreManager implements MotherActivity.OnPermissions {
 
         if (mSharedPrefsDir.isDirectory() && !FileHelpers.isEmpty(mSharedPrefsDir)) {
             File destination = new File(target, mSharedPrefsDir.getName());
-            FileHelpers.copy(mSharedPrefsDir, destination, file -> Helpers.endsWithAny(file.getName(), Utils.BACKUP_PREFS), null);
+            FileHelpers.copy(mSharedPrefsDir, destination,
+                    file -> Helpers.endsWithAny(file.getName(), Utils.BACKUP_PREFS) && !BackupExclusions.isSignInFile(file), null);
 
             // Don't store unique id
             FileHelpers.delete(new File(destination, HiddenPrefs.SHARED_PREFERENCES_NAME + ".xml"));
@@ -197,12 +198,8 @@ public class BackupAndRestoreManager implements MotherActivity.OnPermissions {
 
         if (mFilesDir.isDirectory() && !FileHelpers.isEmpty(mFilesDir)) {
             File destination = new File(target, mFilesDir.getName());
-            // Never back up login credentials: the refresh tokens in global_prefs stay on this device.
-            // A backup without them restores as signed out (or leaves the current login untouched on
-            // a same-device restore, since there is nothing to overwrite it with).
-            FileHelpers.copy(mFilesDir, destination,
-                    file -> !Helpers.equalsAny(file.getName(), Utils.BACKUP_FILE_EXCLUSIONS),
-                    dir -> Helpers.equalsAny(dir.getName(), Utils.BACKUP_DIRS));
+            // NEWTUBE(backup): sign-in tokens stay out of the zip (shared storage)
+            FileHelpers.copy(mFilesDir, destination, file -> !BackupExclusions.isSignInFile(file), dir -> Helpers.equalsAny(dir.getName(), Utils.BACKUP_DIRS));
         }
     }
 
