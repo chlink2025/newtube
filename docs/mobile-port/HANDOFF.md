@@ -2391,30 +2391,47 @@ on YouTube 21.18) that `WatchRootLayout` hit-tests because half of it lies over 
 and hold for 2x keeps the pitch and ends with its video. Details and measurements are in the
 commit messages `8ef63af9`..`d406874a`.
 
-## 38. Comment translation (2026-10-05)
+## 38. Comment translation (2026-10-05, updated 2026-11-08)
 
 **A comment's Translate pill translates it to the language picked in Settings** (Playback -> Under
 the video -> "Translate comments to"; default = app language). Manual only, per comment, like
-YouTube's own. There is no local translator and no native code involved: the app calls InnerTube
-and shows what comes back. **The feature is off by default** (`PlayerData` slot 64,
-"Translate comments"; the language row greyed until it is on) - the pill only exists while the
-switch is on, and turning it off puts any fetched translation back to the original.
+YouTube's own: the pill appears by itself under comments written in another language, and tapping
+it requests the translation. There is no local translator and no native code involved: the app
+calls InnerTube and shows what comes back. **The feature is on by default** (`PlayerData` slot 64,
+"Translate comments"; a one-shot `MobileMainApplication` migration enables it for existing
+installs; the language row is greyed while the switch is off). Turning the switch off puts any
+fetched translation back to the original; turning it on again brings the cached one back.
 
-YouTube's app has no comment-translate code or strings of its own - its comment "Translate" is a
-server-rendered action forwarded verbatim to `comment/perform_comment_action` (decompiled: `akuq`
-get_comments, `akul` perform_comment_action, `akum` action factory; all actions click through the
-same generic dispatcher). The TV renderer NewTube reads carries only like/dislike params, so the
-action is built locally (as with write-comments) from the layout the reference client uses
-(YouTube.js v18.1.0 `ProtoUtils.encodeCommentActionParams` + `CommentView.translate`):
+The TV comments response carries no source language. Verified 2026-11-08: the TV
+`commentRenderer` has no language field (hl=en or hl=ja), and the newer WEB
+`commentEntityPayload` only has `translateButtonStyle` plus a `translateButtonEntityKey` present
+on every comment, English and Japanese alike (the tri-state state is identical too). The pill is
+therefore offered by a local heuristic (`CommentLanguageDetector`, ported from the Greasy Fork
+reference script): writing system first (kana/Hangul/Thai/Greek/Devanagari/Hebrew/Arabic/Cyrillic/
+Han), Latin stopword scoring for en/es/fr/de/it/pt/id/tr/pl/nl plus Vietnamese diacritics, and
+"uncertain" counts as foreign. A comment with no letters (emoji/links only) gets no pill. After a
+tap, if the endpoint returns the original text unchanged, the entry is marked `noTranslation`,
+the pill disappears and "Nothing to translate" is shown - that post-check covers the same-language
+comments the heuristic could not recognise.
 
-- `comment/perform_comment_action`, body `{"actions":["<urlencoded base64>"]}` (base template the
-  same as delete), TV context.
-- `PeformCommentActionParams` (sic): `{1: 22 (translate), 2: 2, 3: " ", 5: " ", 23: " ",
-  31: {2: " ", 3: {1: {1: text}}, 4: targetLanguage}}`. The verified YouTube.js payload sends blank
-  ids plus `unk_num=2`; `CommentsApiParams.translateCommentParams` mirrors exactly that and keeps
-  the real-id variant (id drops `unk_num`) one flag away if the TV endpoint ever wants it.
-- The text is filtered to letters/numbers/punctuation/separators first (`stripEmojis`); InnerTube
-  answers 400 otherwise (YouTube.js's own workaround).
+YouTube's app gets the comment translate button from the comment entity payload
+(`translateButtonStyle`, `seeOriginalText`) and sends the same `comment/perform_comment_action`
+type 22 (decompiled: `akuq` get_comments, `akul` perform_comment_action, `akum` action factory).
+The TV renderer NewTube reads carries only like/dislike params, so the action is built locally (as
+with write-comments) from the layout current clients use (verified live 2026-11-08):
+
+- `comment/perform_comment_action`, body `{"actions":["<base64url, no padding>"]}` (the action
+  template is the same as delete), TV context. The encoding is not the standard base64 +
+  URL-encode used by create/reply/delete: translate must be base64url without padding.
+- `{1: 22, 31: {2: commentId, 3: {1: {1: text}}, 4: targetLanguage, 5: 0}}`. The older
+  YouTube.js v18 layout (blank ids plus top-level 2/3/5/23) answers HTTP 400 INVALID_ARGUMENT and
+  is gone. Verified live 2026-11-08 with both TVHTML5 and WEB contexts and a real comment id:
+  HTTP 200, `actionResults[0].status = STATUS_SUCCEEDED`, translated text in
+  `frameworkUpdates.entityBatchUpdate.mutations[].payload.commentEntityPayload.translatedContent.content`.
+- Emoji are sent as-is; the current layout accepts them (the old `stripEmojis` was a workaround
+  for the broken layout). An 8000-character comment also succeeds, so no chunking is needed.
+- A comment already in the target language returns the original text as `translatedContent`, not
+  null; the panel compares the two and hides the pill (see above).
 - The answer is read loosely: every `commentEntityPayload` under
   `frameworkUpdates.entityBatchUpdate.mutations` is checked for a non-blank
   `translatedContent.content`, the payload matching the requested comment id first (the translation
@@ -2424,22 +2441,28 @@ action is built locally (as with write-comments) from the layout the reference c
   translate", not as a failure).
 - Works signed out: unlike like/write, no auth header and no `checkSignedIn`.
 
-App side: `item_mobile_comment.xml` gained a `comment_translate` pill after Reply; the adapter's
-`Entry` carries `translatedText` / `showingOriginal` / `translating` (translated text is plain -
-no runs, so links come back only with "Show original"), the panel keeps translations per comment
+App side: `item_mobile_comment.xml` has the `comment_translate` pill on its own line under the
+comment text (above the like/reply row), 48dp touch target with the same 36dp ripple as the action
+pills. The label is `Translate to %1$s` (the target's display name in the app locale) and flips to
+`See original (Translated by Google)` while translated. The adapter's `Entry` carries
+`translatedText` / `showingOriginal` / `translating` / `noTranslation` (translated text is plain -
+no runs, so links come back only with "See original"), the panel keeps translations per comment
 id for the video's lifetime, applies them to rows born later (a next page, a sort switch) and
 copies the visible text. Requests are tracked per comment id (`Map<String, Disposable>`), so
 tapping several comments in a row translates all of them, each with the panel's generation number
 guarding late answers; a real refusal shows YouTube's words
-(`mobile_comments_translate_failed_reason`). Returning from Settings rebinds the rows if the
-switch changed (`MobilePlaybackActivity.onResume` -> `CommentsPanel.onTranslateSettingChanged`).
+(`mobile_comments_translate_failed_reason`). Returning from Settings
+(`MobilePlaybackActivity.onResume` -> `CommentsPanel.onTranslateSettingChanged`) rebinds the rows
+when the switch changed; when the target language changed it also cancels requests in the air,
+clears `mTranslated` and resets every entry's translation state so nothing is shown in the old
+language.
 
-Not yet verified on a device (verification runs in the cloud): the first device that tries it
-should confirm the TV context accepts type 22 (a capture from the official app or web is the
-comparison; if the endpoint balks, first try real ids via the params builder, then the WEB context
-for this one call). Also worth checking: whether an already-target-language comment comes back
-without `translatedContent` (now the "Nothing to translate" note) and whether `translatedContent`
-is a Text object rather than `{content: ...}` (the parser accepts both).
+The request layout and encoding are verified against live YouTube (2026-11-08, TVHTML5 and WEB
+contexts, real comment id, emoji and 8000-character text). `TranslateCommentParamsTest` covers the
+payload/encoding and `CommentLanguageDetectorTest` the heuristic; the first device run should still
+confirm the pill's own-line placement, the two-line wrap on a 360dp screen, and the "See original"
+round trip. The parser already accepts `translatedContent` as either `{content: ...}` or a Text
+object.
 
 ## 39. Description copy: textIsSelectable + autoLink is a trap (2026-10-05)
 

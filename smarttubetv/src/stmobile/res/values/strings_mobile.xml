@@ -127,8 +127,8 @@
         <item quantity="other">%1$d replies</item>
     </plurals>
     <!-- NEWTUBE(comment-translate) -->
-    <string name="mobile_comments_translate">Translate</string>
-    <string name="mobile_comments_show_original">Show original</string>
+    <string name="mobile_comments_translate_to">Translate to %1$s</string>
+    <string name="mobile_comments_show_original">See original (Translated by Google)</string>
     <string name="mobile_comments_translate_failed">Couldn\'t translate the comment</string>
     <string name="mobile_comments_translate_failed_reason">Couldn\'t translate: %1$s</string>
     <string name="mobile_comments_translate_none">Nothing to translate</string>

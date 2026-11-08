@@ -209,8 +209,8 @@
         <item quantity="other">%1$d respuestas</item>
     </plurals>
     <!-- NEWTUBE(comment-translate) -->
-    <string name="mobile_comments_translate">Traducir</string>
-    <string name="mobile_comments_show_original">Ver original</string>
+    <string name="mobile_comments_translate_to">Traducir a %1$s</string>
+    <string name="mobile_comments_show_original">Ver original (traducido por Google)</string>
     <string name="mobile_comments_translate_failed">No se ha podido traducir el comentario</string>
     <string name="mobile_comments_translate_failed_reason">No se ha podido traducir: %1$s</string>
     <string name="mobile_comments_translate_none">Nada que traducir</string>

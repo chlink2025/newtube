@@ -1462,8 +1462,8 @@ public class MobilePlaybackActivity extends MobileActivity
     protected void onResume() {
         super.onResume();
 
-        // NEWTUBE(comment-translate): Settings may have flipped the switch while the panel kept
-        // its rows; rebind if it changed.
+        // NEWTUBE(comment-translate): Settings may have changed the switch or the target language
+        // while the panel kept its rows; rebind (and drop stale translations) if either changed.
         if (mCommentsPanel != null) {
             mCommentsPanel.onTranslateSettingChanged();
         }

@@ -116,8 +116,8 @@
         <item quantity="other">%1$d 条回复</item>
     </plurals>
     <!-- NEWTUBE(comment-translate) -->
-    <string name="mobile_comments_translate">翻译</string>
-    <string name="mobile_comments_show_original">显示原文</string>
+    <string name="mobile_comments_translate_to">翻译成%1$s</string>
+    <string name="mobile_comments_show_original">查看原文（由 Google 翻译）</string>
     <string name="mobile_comments_translate_failed">评论翻译失败</string>
     <string name="mobile_comments_translate_failed_reason">翻译失败：%1$s</string>
     <string name="mobile_comments_translate_none">没有可翻译的内容</string>

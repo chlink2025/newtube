@@ -78,12 +78,13 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * post shows at once - on top of the list or the thread, and on top of any order or replies page
  * loaded later - and what they closed without posting stays as a draft until the video changes.</p>
  *
- * <p>NEWTUBE(comment-translate): with the Settings switch on, every comment with text carries a
- * Translate pill (the action row, after Reply). The tap asks YouTube for the translation to the
- * language picked in Settings; the pill becomes Show original and the row shows the translated
- * text. Translations are remembered by comment id for as long as the video is on the page, so the
- * two sort orders and a comment's replies page all show the same state. Switch off: the pill is
- * hidden and originals show.</p>
+ * <p>NEWTUBE(comment-translate): with the Settings switch on, a comment written in another
+ * language carries a Translate pill under its text (the local heuristic skips the target language
+ * and letterless comments). The tap asks YouTube for the translation to the language picked in
+ * Settings; the pill becomes "See original (Translated by Google)" and the row shows the
+ * translated text. Translations are remembered by comment id for as long as the video is on the
+ * page, so the two sort orders and a comment's replies page all show the same state. Switch off:
+ * the pill is hidden and originals show.</p>
  */
 final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayout.Callback,
         CommentComposer.Callback {
@@ -270,10 +271,14 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     // --- NEWTUBE(comment-translate)
     /** Translated text by comment id, shared by every list showing that comment. */
     private final Map<String, String> mTranslated = new HashMap<>();
+    /** Comments the endpoint said need no translation (it returned the original text). */
+    private final Set<String> mNoTranslation = new HashSet<>();
     /** Translate requests in the air by comment id: different comments may translate together. */
     private final Map<String, Disposable> mTranslateRequests = new HashMap<>();
     /** The Settings switch as last seen, so returning from Settings can rebind changed rows. */
     private boolean mTranslateEnabled;
+    /** The target language as last seen, so a change can drop the old language's translations. */
+    private String mTranslateLanguage;
 
     CommentsPanel(FragmentActivity activity, CommentsPanelLayout layout, Host host) {
         mActivity = activity;
@@ -288,6 +293,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         }
         mService = service;
         mTranslateEnabled = isTranslateEnabled();
+        mTranslateLanguage = commentTranslateLanguage();
 
         mTitles = layout.findViewById(R.id.comments_titles);
         mTitleList = layout.findViewById(R.id.comments_title_list);
@@ -489,6 +495,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         mPostedReplies.clear();
         mDeletedIds.clear();
         mTranslated.clear();
+        mNoTranslation.clear();
         mGeneration++;
         mVideoId = videoId;
         mCount = null;
@@ -1514,8 +1521,9 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
 
     @Override
     public void onCopy(CommentsAdapter.Entry entry) {
-        // NEWTUBE(comment-translate): what is on screen is what gets copied.
-        String text = entry.translatedText != null && !entry.showingOriginal
+        // NEWTUBE(comment-translate): what is on screen is what gets copied; with the switch off
+        // the original is on screen even where a translation is still cached.
+        String text = isTranslateEnabled() && entry.translatedText != null && !entry.showingOriginal
                 ? entry.translatedText : entry.item.getMessage();
         if (TextUtils.isEmpty(text)) {
             return;
@@ -1552,6 +1560,18 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
             notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
             return;
         }
+        String cached = mTranslated.get(id);
+        if (cached != null) {
+            entry.translatedText = cached;
+            entry.showingOriginal = false;
+            notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+            return;
+        }
+        if (mNoTranslation.contains(id)) {
+            entry.noTranslation = true;
+            notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+            return;
+        }
         String text = entry.item.getMessage();
         if (mService == null || TextUtils.isEmpty(text) || mTranslateRequests.containsKey(id) || entry.translating) {
             return;
@@ -1559,13 +1579,24 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         entry.translating = true;
         notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
         int generation = mGeneration;
+        String requestLanguage = commentTranslateLanguage();
         Disposable request = mService
-                .translateCommentObserve(text, commentTranslateLanguage(), id)
+                .translateCommentObserve(text, requestLanguage, id)
                 .subscribe(
                         translated -> {
                             mTranslateRequests.remove(id);
-                            if (generation == mGeneration && !mReleased) {
+                            if (generation == mGeneration && !mReleased
+                                    && requestLanguage.equals(commentTranslateLanguage())) {
                                 entry.translating = false;
+                                // Same language: YouTube hands the original text back. Drop the
+                                // pill for this comment instead of showing a no-op translation.
+                                if (translated.trim().equalsIgnoreCase(text.trim())) {
+                                    entry.noTranslation = true;
+                                    mNoTranslation.add(id);
+                                    notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+                                    MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_none);
+                                    return;
+                                }
                                 entry.translatedText = translated;
                                 entry.showingOriginal = false;
                                 mTranslated.put(id, translated);
@@ -1574,8 +1605,15 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
                         },
                         error -> {
                             mTranslateRequests.remove(id);
-                            if (generation == mGeneration && !mReleased) {
+                            if (generation == mGeneration && !mReleased
+                                    && requestLanguage.equals(commentTranslateLanguage())) {
                                 entry.translating = false;
+                                // "No translation" is final for this comment: hide the pill so a
+                                // repeat tap cannot produce the same note again.
+                                if (error instanceof CommentsService.NoTranslationException) {
+                                    entry.noTranslation = true;
+                                    mNoTranslation.add(id);
+                                }
                                 notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
                                 showTranslateFailure(error);
                             }
@@ -1594,16 +1632,37 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         return PlayerData.instance(mActivity).isCommentTranslationEnabled();
     }
 
+    @Override
+    public String getCommentTranslateLanguage() {
+        return commentTranslateLanguage();
+    }
+
     /**
-     * NEWTUBE(comment-translate): the Settings switch changed while the panel kept its rows. The
-     * changed rows bind again; a no-op otherwise.
+     * NEWTUBE(comment-translate): Settings may have changed the switch or the target language
+     * while the panel kept its rows. The switch only rebinds (cached translations are kept for
+     * when it comes back on); a new language drops cached translations and requests in the air so
+     * nothing is shown in the old language.
      */
     void onTranslateSettingChanged() {
         boolean enabled = isTranslateEnabled();
-        if (enabled == mTranslateEnabled) {
+        String language = commentTranslateLanguage();
+        boolean languageChanged = !TextUtils.equals(language, mTranslateLanguage);
+        if (enabled == mTranslateEnabled && !languageChanged) {
             return;
         }
         mTranslateEnabled = enabled;
+        if (languageChanged) {
+            mTranslateLanguage = language;
+            for (Disposable request : mTranslateRequests.values()) {
+                request.dispose();
+            }
+            mTranslateRequests.clear();
+            mTranslated.clear();
+            mNoTranslation.clear();
+            mListAdapter.resetTranslations();
+            mRepliesAdapter.resetTranslations();
+            return;
+        }
         mListAdapter.notifyItemRangeChanged(0, mListAdapter.getItemCount());
         mRepliesAdapter.notifyItemRangeChanged(0, mRepliesAdapter.getItemCount());
     }
@@ -1932,13 +1991,14 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
 
     /** NEWTUBE(comment-translate): rows born later (a page, a sort switch) take the state too. */
     private void applyTranslations(List<CommentsAdapter.Entry> entries) {
-        if (mTranslated.isEmpty()) {
+        if (mTranslated.isEmpty() && mNoTranslation.isEmpty()) {
             return;
         }
         for (CommentsAdapter.Entry entry : entries) {
             String id = entry.item.getId();
             if (id != null) {
                 entry.translatedText = mTranslated.get(id);
+                entry.noTranslation = mNoTranslation.contains(id);
             }
         }
     }

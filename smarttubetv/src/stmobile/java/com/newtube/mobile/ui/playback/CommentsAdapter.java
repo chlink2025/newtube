@@ -37,11 +37,13 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.liskovsoft.mediaserviceinterfaces.data.CommentItem;
+import com.liskovsoft.sharedutils.locale.LocaleUtility;
 import com.liskovsoft.smartyoutubetv2.tv.R;
 import com.newtube.mobile.ui.common.MetaSeparator;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -79,9 +81,11 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         boolean isOwnComment(Entry entry);
 
         // NEWTUBE(comment-translate)
-        /** The Translate / Show original pill of a comment with text; off hides it everywhere. */
+        /** The Translate / See original pill of a comment with text; off hides it everywhere. */
         void onTranslateClicked(Entry entry);
         boolean isTranslateEnabled();
+        /** The target language from Settings (a base code such as "en" or "zh"). */
+        String getCommentTranslateLanguage();
     }
 
     /** One comment and what the person did to it here (their like, whether it is unfolded). */
@@ -104,6 +108,12 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         String translatedText;
         boolean showingOriginal;
         boolean translating;
+        /**
+         * NEWTUBE(comment-translate): the endpoint returned the original text unchanged, so this
+         * comment needs no translation; the pill stays hidden even if the heuristic guessed
+         * otherwise.
+         */
+        boolean noTranslation;
         /**
          * NEWTUBE(write-comments): replies the person posted to it here, newest first. The panel
          * shares one list among every entry of the same comment (Top and Newest each have theirs).
@@ -274,6 +284,30 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         mParentLabel = label;
         if (mParent != null) {
             notifyItemChanged(1);
+        }
+    }
+
+    /** NEWTUBE(comment-translate): the target language changed: forget everything translated. */
+    void resetTranslations() {
+        resetTranslation(mParent);
+        for (Entry entry : mItems) {
+            resetTranslation(entry);
+        }
+        notifyItemRangeChanged(0, getItemCount());
+    }
+
+    private static void resetTranslation(@Nullable Entry entry) {
+        if (entry == null) {
+            return;
+        }
+        entry.translatedText = null;
+        entry.showingOriginal = false;
+        entry.translating = false;
+        entry.noTranslation = false;
+        // Replies posted here are entries too; some may live in a parent's list rather than the
+        // adapter's current items (the replies page is closed), so reach them through the parent.
+        for (Entry reply : entry.postedReplies) {
+            resetTranslation(reply);
         }
     }
 
@@ -640,7 +674,7 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 entry.mText = buildText(item, mListener, mLinkColor);
             }
             // NEWTUBE(comment-translate): a translation is plain text (YouTube sends no runs), so
-            // the original's bold runs and links only come back with "Show original". Feature off:
+            // the original's bold runs and links only come back with "See original". Feature off:
             // the original shows even where a translation was already fetched.
             boolean translateEnabled = mListener.isTranslateEnabled();
             CharSequence text = translateEnabled && entry.translatedText != null && !entry.showingOriginal
@@ -662,18 +696,52 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             loadAvatar(mAvatar, avatarUrl(item.getAuthorPhoto()), mAvatarPx);
         }
 
-        /** NEWTUBE(comment-translate): the pill's label and its held-while-translating look. */
+        /**
+         * NEWTUBE(comment-translate): the pill is offered for a comment in another language (or
+         * when the local check is unsure); it stays hidden for the target language and for a
+         * comment with no letters. Its label carries the target language, then flips to "See
+         * original" while translated.
+         */
         private void bindTranslate() {
             Entry entry = mEntry;
             if (entry == null) {
                 return;
             }
-            mTranslate.setVisibility(!mListener.isTranslateEnabled() || TextUtils.isEmpty(entry.item.getMessage())
-                    ? View.GONE : View.VISIBLE);
-            mTranslateLabel.setText(entry.translatedText != null && !entry.showingOriginal
-                    ? R.string.mobile_comments_show_original : R.string.mobile_comments_translate);
+            boolean show = shouldShowTranslate(entry);
+            mTranslate.setVisibility(show ? View.VISIBLE : View.GONE);
+            if (!show) {
+                return;
+            }
+            mTranslateLabel.setText(translateLabel(itemView.getContext(), entry));
             mTranslate.setEnabled(!entry.translating);
             mTranslate.setAlpha(entry.translating ? 0.5f : 1f);
+        }
+
+        private boolean shouldShowTranslate(Entry entry) {
+            if (!mListener.isTranslateEnabled() || TextUtils.isEmpty(entry.item.getMessage())) {
+                return false;
+            }
+            if (entry.translatedText != null) {
+                return true;
+            }
+            if (entry.noTranslation) {
+                return false;
+            }
+            return !CommentLanguageDetector.isSameLanguage(entry.item.getMessage(),
+                    mListener.getCommentTranslateLanguage());
+        }
+
+        private CharSequence translateLabel(Context context, Entry entry) {
+            if (entry.translatedText != null && !entry.showingOriginal) {
+                return context.getString(R.string.mobile_comments_show_original);
+            }
+            String code = mListener.getCommentTranslateLanguage();
+            Locale locale = LocaleUtility.getCurrentLocale(context);
+            String name = TextUtils.isEmpty(code) ? "" : new Locale(code).getDisplayLanguage(locale);
+            if (TextUtils.isEmpty(name)) {
+                name = code == null ? "" : code.toUpperCase(locale);
+            }
+            return context.getString(R.string.mobile_comments_translate_to, name);
         }
 
         /** Like state; {@code animate} = the person just tapped it (pop the thumb, roll the count). */
@@ -858,10 +926,9 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_more,
                             context.getString(R.string.mobile_comments_delete)));
                 }
-                if (mListener.isTranslateEnabled() && !TextUtils.isEmpty(entry.item.getMessage())) {
+                if (shouldShowTranslate(entry)) {
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_translate,
-                            context.getString(entry.translatedText != null && !entry.showingOriginal
-                                    ? R.string.mobile_comments_show_original : R.string.mobile_comments_translate)));
+                            translateLabel(context, entry)));
                 }
                 if (mMessage.canFold()) {
                     info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_message,

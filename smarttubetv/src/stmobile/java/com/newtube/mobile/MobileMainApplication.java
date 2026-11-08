@@ -238,6 +238,17 @@ public class MobileMainApplication extends MainApplication {
             migrations.edit().putBoolean("caption_style_white_default", true).apply();
         }
 
+        // COMMENT TRANSLATION DEFAULT (mobile-only, one-shot): comment translation used to be an
+        // opt-in feature, and slot 64 holds false even for installs that never touched the switch.
+        // The new behaviour offers the Translate pill automatically, so enable it once here;
+        // turning it off in Settings afterwards sticks (the flag prevents re-enabling).
+        if (!migrations.getBoolean("comment_translate_default_on", false)) {
+            PlayerData playerData = PlayerData.instance(this);
+            playerData.setCommentTranslationEnabled(true);
+            playerData.persistNow();
+            migrations.edit().putBoolean("comment_translate_default_on", true).apply();
+        }
+
         // WATCH LATER MENU ITEM (mobile-only, one-shot): "Save to Watch later" sits on every
         // YouTube card menu, but upstream ships it OFF by default. Flipping MENU_ITEM_DEFAULT
         // alone would only reach fresh installs - MainUIData's own upgrade path enables a new

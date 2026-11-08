@@ -92,7 +92,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
     private String mSubtitleLanguage;
     /** NEWTUBE(comment-translate): the language comments translate to. */
     private String mCommentTranslateLanguage;
-    /** NEWTUBE(comment-translate): the Translate pill is offered at all (default off). */
+    /** NEWTUBE(comment-translate): the Translate pill is offered at all (default on). */
     private boolean mIsCommentTranslationEnabled;
     private boolean mIsAllSpeedEnabled;
     private int mPlaybackMode;
@@ -980,7 +980,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         mIsVideoFlipEnabled = Helpers.parseBoolean(split, 61, false);
         mIsAudioDelayEnabled = Helpers.parseBoolean(split, 62, false);
         mCommentTranslateLanguage = Helpers.parseStr(split, 63, LocaleUtility.getCurrentLanguage(mPrefs.getContext()));
-        mIsCommentTranslationEnabled = Helpers.parseBoolean(split, 64, false);
+        mIsCommentTranslationEnabled = Helpers.parseBoolean(split, 64, true);
 
         if (speeds != null) {
             for (String speedSpec : speeds) {
