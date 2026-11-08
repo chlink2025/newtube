@@ -96,6 +96,9 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         /** A link in a comment to another video. */
         void onCommentVideoLink(String videoId);
 
+        /** NEWTUBE(comment-authors): the commenter's avatar was tapped. */
+        void onCommentAuthorClicked(CommentItem item);
+
         /** The panel now covers (true) or uncovers the watch page. */
         void onCommentsPanelShown(boolean shown);
     }
@@ -1472,6 +1475,16 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     private void notifyEntry(CommentsAdapter.Entry entry, Object payload) {
         mListAdapter.notifyEntry(entry, payload);
         mRepliesAdapter.notifyEntry(entry, payload);
+    }
+
+    @Override
+    public void onAuthorClicked(CommentsAdapter.Entry entry) {
+        // NEWTUBE(comment-authors): the TV comments response names the author by @handle only.
+        // ChannelPresenter resolves it to the UC id on its normal load path.
+        String author = entry.item.getAuthorName();
+        if (!TextUtils.isEmpty(author) && author.startsWith("@")) {
+            mHost.onCommentAuthorClicked(entry.item);
+        }
     }
 
     @Override

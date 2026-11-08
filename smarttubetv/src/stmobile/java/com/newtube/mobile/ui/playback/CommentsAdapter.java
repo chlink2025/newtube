@@ -67,6 +67,8 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     interface Listener {
         void onLikeClicked(Entry entry);
         void onRepliesClicked(Entry entry);
+        /** NEWTUBE(comment-authors): the author's avatar was tapped. */
+        void onAuthorClicked(Entry entry);
         void onLinkClicked(CommentItem.Span span);
         void onCopy(Entry entry);
         void onRetry();
@@ -616,6 +618,11 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mMessage.setFoldable(false);
             }
             mMessage.setListener(this);
+            mAvatar.setOnClickListener(v -> {
+                if (mEntry != null) {
+                    mListener.onAuthorClicked(mEntry);
+                }
+            });
             mLike.setOnClickListener(v -> {
                 if (mEntry != null) {
                     mListener.onLikeClicked(mEntry);
@@ -912,6 +919,10 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     return;
                 }
                 Context context = host.getContext();
+                if (!TextUtils.isEmpty(entry.item.getAuthorName())) {
+                    info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_avatar,
+                            context.getString(R.string.mobile_card_go_to_channel, entry.item.getAuthorName())));
+                }
                 info.addAction(new AccessibilityNodeInfoCompat.AccessibilityActionCompat(R.id.comment_like,
                         context.getString(entry.liked ? R.string.mobile_comments_unlike : R.string.mobile_comments_like)));
                 if (!mIsParent) {
@@ -943,7 +954,10 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             public boolean performAccessibilityAction(@NonNull View host, int action, @Nullable Bundle args) {
                 Entry entry = mEntry;
                 if (entry != null) {
-                    if (action == R.id.comment_like) {
+                    if (action == R.id.comment_avatar) {
+                        mListener.onAuthorClicked(entry);
+                        return true;
+                    } else if (action == R.id.comment_like) {
                         mListener.onLikeClicked(entry);
                         return true;
                     } else if (action == R.id.comment_replies) {

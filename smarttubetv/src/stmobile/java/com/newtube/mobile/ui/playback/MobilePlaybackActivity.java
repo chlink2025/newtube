@@ -87,6 +87,7 @@ import androidx.media3.ui.TimeBar;
 import com.liskovsoft.mediaserviceinterfaces.data.MediaItemFormatInfo;
 import com.liskovsoft.sharedutils.helpers.Helpers;
 import com.liskovsoft.mediaserviceinterfaces.data.ChatItem;
+import com.liskovsoft.mediaserviceinterfaces.data.CommentItem;
 import com.liskovsoft.mediaserviceinterfaces.data.PlaylistInfo;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.Video;
 import com.liskovsoft.smartyoutubetv2.common.app.models.data.VideoGroup;
@@ -7671,6 +7672,11 @@ public class MobilePlaybackActivity extends MobileActivity
         }
 
         @Override
+        public void onCommentAuthorClicked(CommentItem item) {
+            openCommentAuthorChannel(item != null ? item.getAuthorName() : null);
+        }
+
+        @Override
         public void onCommentsPanelShown(boolean shown) {
             // The page under the panel is covered: keep TalkBack off it (the video stays reachable).
             if (mWatchScroll != null) {
@@ -8366,6 +8372,23 @@ public class MobilePlaybackActivity extends MobileActivity
         // the watch page untouched.
         MiniPlayerBridge.prepareNavigation(this);
         MediaServiceManager.chooseChannelPresenter(this, video);
+    }
+
+    /**
+     * NEWTUBE(comment-authors): a commenter's avatar opens their channel page. The TV comments
+     * response carries only the author's @handle; ChannelPresenter resolves it to the UC id while
+     * the channel loads. As with the watch-page channel row, playback docks into the mini player
+     * only if the channel screen is actually created.
+     */
+    private void openCommentAuthorChannel(@Nullable String authorName) {
+        if (TextUtils.isEmpty(authorName) || !authorName.startsWith("@")) {
+            return;
+        }
+        Video channel = new Video();
+        channel.channelId = authorName;
+        channel.author = authorName;
+        MiniPlayerBridge.prepareNavigation(this);
+        ChannelPresenter.instance(this).openChannel(channel);
     }
 
     private void maybePageSuggestions() {
