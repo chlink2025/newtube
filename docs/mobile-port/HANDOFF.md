@@ -2391,28 +2391,36 @@ on YouTube 21.18) that `WatchRootLayout` hit-tests because half of it lies over 
 and hold for 2x keeps the pitch and ends with its video. Details and measurements are in the
 commit messages `8ef63af9`..`d406874a`.
 
-## 38. Comment translation (2026-10-05, updated 2026-11-08)
+## 38. Comment translation (2026-10-05, updated 2026-11-14)
 
 **A comment's Translate pill translates it to the language picked in Settings** (Playback -> Under
 the video -> "Translate comments to"; default = app language). Manual only, per comment, like
-YouTube's own: the pill appears by itself under comments written in another language, and tapping
-it requests the translation. There is no local translator and no native code involved: the app
-calls InnerTube and shows what comes back. **The feature is on by default** (`PlayerData` slot 64,
-"Translate comments"; a one-shot `MobileMainApplication` migration enables it for existing
-installs; the language row is greyed while the switch is off). Turning the switch off puts any
-fetched translation back to the original; turning it on again brings the cached one back.
+YouTube's own: by default the pill appears by itself under comments written in another language
+(Playback -> Under the video -> "Show Translate button", default "Only on comments in other
+languages"), and tapping it requests the translation. Setting that row to "On all comments" puts
+the pill under every comment with text, as the app did before 2026-11-08. There is no local
+translator and no native code involved: the app calls InnerTube and shows what comes back. **The
+feature is on by default** (`PlayerData` slot 64, "Translate comments"; a one-shot
+`MobileMainApplication` migration enables it for existing installs; the mode and language rows
+are greyed while the switch is off). Turning the switch off puts any fetched translation back to
+the original; turning it on again brings the cached one back.
 
 The TV comments response carries no source language. Verified 2026-11-08: the TV
 `commentRenderer` has no language field (hl=en or hl=ja), and the newer WEB
 `commentEntityPayload` only has `translateButtonStyle` plus a `translateButtonEntityKey` present
-on every comment, English and Japanese alike (the tri-state state is identical too). The pill is
-therefore offered by a local heuristic (`CommentLanguageDetector`, ported from the Greasy Fork
-reference script): writing system first (kana/Hangul/Thai/Greek/Devanagari/Hebrew/Arabic/Cyrillic/
-Han), Latin stopword scoring for en/es/fr/de/it/pt/id/tr/pl/nl plus Vietnamese diacritics, and
-"uncertain" counts as foreign. A comment with no letters (emoji/links only) gets no pill. After a
-tap, if the endpoint returns the original text unchanged, the entry is marked `noTranslation`,
-the pill disappears and "Nothing to translate" is shown - that post-check covers the same-language
-comments the heuristic could not recognise.
+on every comment, English and Japanese alike (the tri-state state is identical too). In the
+default "only other languages" mode the pill is therefore offered by a local heuristic
+(`CommentLanguageDetector`, ported from the Greasy Fork reference script): writing system first
+(kana/Hangul/Thai/Greek/Devanagari/Hebrew/Arabic/Cyrillic/Han), Latin stopword scoring for
+en/es/fr/de/it/pt/id/tr/pl/nl plus Vietnamese diacritics, and "uncertain" counts as foreign. A
+comment with no letters (emoji/links only) gets no pill. "All comments" mode skips the heuristic
+and offers the pill on every comment with text (emoji/links only included), as before the
+2026-11-08 heuristic change. After a tap, if the endpoint returns the original text unchanged,
+the entry is marked `noTranslation` and "Nothing to translate" is shown. In "only other languages"
+mode that also hides the pill - the post-check covers the same-language comments the heuristic
+could not recognise. "All comments" mode ignores the mark for visibility (the pill stays) and a
+repeat tap shows the same note again, from the cached `noTranslation` state rather than a new
+request.
 
 YouTube's app gets the comment translate button from the comment entity payload
 (`translateButtonStyle`, `seeOriginalText`) and sends the same `comment/perform_comment_action`
@@ -2453,9 +2461,11 @@ tapping several comments in a row translates all of them, each with the panel's 
 guarding late answers; a real refusal shows YouTube's words
 (`mobile_comments_translate_failed_reason`). Returning from Settings
 (`MobilePlaybackActivity.onResume` -> `CommentsPanel.onTranslateSettingChanged`) rebinds the rows
-when the switch changed; when the target language changed it also cancels requests in the air,
-clears `mTranslated` and resets every entry's translation state so nothing is shown in the old
-language.
+when the switch or the display mode changed; when the target language changed it also cancels
+requests in the air, clears `mTranslated` and resets every entry's translation state so nothing is
+shown in the old language. The display mode is `PlayerData` slot 65
+(`COMMENT_TRANSLATE_MODE_OTHER_LANGUAGES` = 0, the default when the slot is absent;
+`COMMENT_TRANSLATE_MODE_ALL` = 1).
 
 The request layout and encoding are verified against live YouTube (2026-11-08, TVHTML5 and WEB
 contexts, real comment id, emoji and 8000-character text). `TranslateCommentParamsTest` covers the

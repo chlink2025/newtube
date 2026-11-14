@@ -87,6 +87,7 @@ final class SettingsSearch {
             {R.string.mobile_settings_hide_related, R.string.mobile_settings_search_kw_hide_related},
             {R.string.mobile_settings_dislikes, R.string.mobile_settings_search_kw_dislikes},
             {R.string.mobile_settings_comment_translate, R.string.mobile_settings_search_kw_comment_translate},
+            {R.string.mobile_settings_comment_translate_mode, R.string.mobile_settings_search_kw_comment_translate},
             {R.string.mobile_settings_comment_translate_language, R.string.mobile_settings_search_kw_comment_translate},
             {R.string.mobile_settings_quality, R.string.mobile_settings_search_kw_quality},
             {R.string.mobile_settings_default_quality, R.string.mobile_settings_search_kw_quality},

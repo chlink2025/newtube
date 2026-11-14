@@ -173,9 +173,24 @@ final class PlayerPages {
         rows.add(SettingsRow.toggle(context.getString(R.string.mobile_settings_comment_translate),
                 context.getString(R.string.mobile_settings_comment_translate_summary),
                 playerData::isCommentTranslationEnabled, playerData::setCommentTranslationEnabled));
+        rows.add(commentTranslateMode(context, playerData));
         rows.add(commentTranslateLanguage(context, playerData));
 
         return new SettingsPages.Page(context.getString(R.string.mobile_settings_playback), rows);
+    }
+
+    /**
+     * NEWTUBE(comment-translate): which comments offer the Translate pill: only the ones the local
+     * check finds foreign, or every comment with text. Greyed out while the feature is off.
+     */
+    private static SettingsRow commentTranslateMode(Context context, PlayerData playerData) {
+        return SettingsRow.<Integer>choice(context.getString(R.string.mobile_settings_comment_translate_mode))
+                .option(context, R.string.mobile_settings_comment_translate_mode_other_languages,
+                        PlayerData.COMMENT_TRANSLATE_MODE_OTHER_LANGUAGES)
+                .option(context, R.string.mobile_settings_comment_translate_mode_all,
+                        PlayerData.COMMENT_TRANSLATE_MODE_ALL)
+                .bind(playerData::getCommentTranslateMode, playerData::setCommentTranslateMode)
+                .enabledWhen(playerData::isCommentTranslationEnabled);
     }
 
     /**

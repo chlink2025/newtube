@@ -86,6 +86,8 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         /** The Translate / See original pill of a comment with text; off hides it everywhere. */
         void onTranslateClicked(Entry entry);
         boolean isTranslateEnabled();
+        /** Show the pill on every comment with text instead of only where the local check says foreign. */
+        boolean isTranslateAlwaysShown();
         /** The target language from Settings (a base code such as "en" or "zh"). */
         String getCommentTranslateLanguage();
     }
@@ -112,8 +114,8 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         boolean translating;
         /**
          * NEWTUBE(comment-translate): the endpoint returned the original text unchanged, so this
-         * comment needs no translation; the pill stays hidden even if the heuristic guessed
-         * otherwise.
+         * comment needs no translation; in "other languages" mode the pill stays hidden even if
+         * the heuristic guessed otherwise. "All comments" mode ignores the mark and keeps the pill.
          */
         boolean noTranslation;
         /**
@@ -704,8 +706,9 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         /**
-         * NEWTUBE(comment-translate): the pill is offered for a comment in another language (or
-         * when the local check is unsure); it stays hidden for the target language and for a
+         * NEWTUBE(comment-translate): the pill is offered for every comment with text in Settings'
+         * "all comments" mode, otherwise for a comment in another language (or when the local
+         * check is unsure); in that mode it stays hidden for the target language and for a
          * comment with no letters. Its label carries the target language, then flips to "See
          * original" while translated.
          */
@@ -729,6 +732,11 @@ final class CommentsAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 return false;
             }
             if (entry.translatedText != null) {
+                return true;
+            }
+            if (mListener.isTranslateAlwaysShown()) {
+                // NEWTUBE(comment-translate): "all comments" mode ignores both the local check and
+                // the post-tap no-translation mark; the pill stays and a repeat tap says so again.
                 return true;
             }
             if (entry.noTranslation) {

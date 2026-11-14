@@ -43,6 +43,10 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
     public static final int SEEK_PREVIEW_SINGLE = 1;
     public static final int SEEK_PREVIEW_CAROUSEL_SLOW = 2;
     public static final int SEEK_PREVIEW_CAROUSEL_FAST = 3;
+    /** NEWTUBE(comment-translate): offer the pill only where the local check says the comment is foreign. */
+    public static final int COMMENT_TRANSLATE_MODE_OTHER_LANGUAGES = 0;
+    /** NEWTUBE(comment-translate): offer the pill on every comment with text. */
+    public static final int COMMENT_TRANSLATE_MODE_ALL = 1;
     @SuppressLint("StaticFieldLeak")
     private static PlayerData sInstance;
     // NEWTUBE(mobile-ttff): mobile-only cap on the DEFAULT video quality. When the touch flavor turns
@@ -94,6 +98,8 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
     private String mCommentTranslateLanguage;
     /** NEWTUBE(comment-translate): the Translate pill is offered at all (default on). */
     private boolean mIsCommentTranslationEnabled;
+    /** NEWTUBE(comment-translate): which comments offer the pill (other languages or all). */
+    private int mCommentTranslateMode;
     private boolean mIsAllSpeedEnabled;
     private int mPlaybackMode;
     private float mSleepTimerHours;
@@ -773,6 +779,16 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         persistState();
     }
 
+    /** NEWTUBE(comment-translate): which comments offer the pill (COMMENT_TRANSLATE_MODE_*). */
+    public int getCommentTranslateMode() {
+        return mCommentTranslateMode;
+    }
+
+    public void setCommentTranslateMode(int mode) {
+        mCommentTranslateMode = mode;
+        persistState();
+    }
+
     public float getSleepTimerHours() {
         return mSleepTimerHours;
     }
@@ -981,6 +997,7 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
         mIsAudioDelayEnabled = Helpers.parseBoolean(split, 62, false);
         mCommentTranslateLanguage = Helpers.parseStr(split, 63, LocaleUtility.getCurrentLanguage(mPrefs.getContext()));
         mIsCommentTranslationEnabled = Helpers.parseBoolean(split, 64, true);
+        mCommentTranslateMode = Helpers.parseInt(split, 65, COMMENT_TRANSLATE_MODE_OTHER_LANGUAGES);
 
         if (speeds != null) {
             for (String speedSpec : speeds) {
@@ -1018,7 +1035,8 @@ public class PlayerData extends DataChangeBase implements PlayerConstants, Profi
                 mIsNumberKeySeekEnabled, mIsSkip24RateEnabled, mAfrPauseMs, mIsLiveChatEnabled, mLastSubtitleFormats, mLastSpeed, mRotationAngle,
                 mZoomPercents, mPlaybackMode, mAudioLanguage, mSubtitleLanguage, mEnabledSubtitlesPerChannel, mIsSubtitlesPerChannelEnabled,
                 mIsSpeedPerChannelEnabled, Helpers.mergeArray(mSpeeds.values().toArray()), mPitch, mIsSkipShortsEnabled, mLastAudioLanguages,
-                mIsVideoFlipEnabled, mIsAudioDelayEnabled, mCommentTranslateLanguage, mIsCommentTranslationEnabled
+                mIsVideoFlipEnabled, mIsAudioDelayEnabled, mCommentTranslateLanguage, mIsCommentTranslationEnabled,
+                mCommentTranslateMode
         ));
     }
 

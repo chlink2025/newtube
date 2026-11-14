@@ -189,7 +189,10 @@
     <string name="mobile_settings_paid_promotion">付费推广提示</string>
     <string name="mobile_settings_paid_promotion_summary">视频声明含付费推广时显示一条简短提示</string>
     <string name="mobile_settings_comment_translate">翻译评论</string>
-    <string name="mobile_settings_comment_translate_summary">在其他语言的评论下显示翻译按钮</string>
+    <string name="mobile_settings_comment_translate_summary">在评论下显示翻译按钮</string>
+    <string name="mobile_settings_comment_translate_mode">翻译按钮显示范围</string>
+    <string name="mobile_settings_comment_translate_mode_other_languages">仅其他语言的评论</string>
+    <string name="mobile_settings_comment_translate_mode_all">所有评论</string>
     <string name="mobile_settings_comment_translate_language">评论翻译为</string>
 
     <!-- Video quality -->

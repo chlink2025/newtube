@@ -192,7 +192,10 @@
     <string name="mobile_settings_paid_promotion">Tell me about paid promotion</string>
     <string name="mobile_settings_paid_promotion_summary">A short message when a video says it includes a paid promotion</string>
     <string name="mobile_settings_comment_translate">Translate comments</string>
-    <string name="mobile_settings_comment_translate_summary">Show a Translate button under comments in other languages</string>
+    <string name="mobile_settings_comment_translate_summary">Show a Translate button under comments</string>
+    <string name="mobile_settings_comment_translate_mode">Show Translate button</string>
+    <string name="mobile_settings_comment_translate_mode_other_languages">Only on comments in other languages</string>
+    <string name="mobile_settings_comment_translate_mode_all">On all comments</string>
     <string name="mobile_settings_comment_translate_language">Translate comments to</string>
 
     <!-- Video quality -->

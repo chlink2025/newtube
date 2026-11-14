@@ -78,9 +78,10 @@ import io.reactivex.rxjava3.disposables.Disposable;
  * post shows at once - on top of the list or the thread, and on top of any order or replies page
  * loaded later - and what they closed without posting stays as a draft until the video changes.</p>
  *
- * <p>NEWTUBE(comment-translate): with the Settings switch on, a comment written in another
- * language carries a Translate pill under its text (the local heuristic skips the target language
- * and letterless comments). The tap asks YouTube for the translation to the language picked in
+ * <p>NEWTUBE(comment-translate): with the Settings switch on, a comment carries a Translate pill
+ * under its text: by default only when the local heuristic says it is in another language (it
+ * skips the target language and letterless comments), or on every comment with text when Settings
+ * says "all comments". The tap asks YouTube for the translation to the language picked in
  * Settings; the pill becomes "See original (Translated by Google)" and the row shows the
  * translated text. Translations are remembered by comment id for as long as the video is on the
  * page, so the two sort orders and a comment's replies page all show the same state. Switch off:
@@ -280,6 +281,8 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     private final Map<String, Disposable> mTranslateRequests = new HashMap<>();
     /** The Settings switch as last seen, so returning from Settings can rebind changed rows. */
     private boolean mTranslateEnabled;
+    /** The "all comments" mode as last seen, so returning from Settings can rebind changed rows. */
+    private boolean mTranslateAlwaysShown;
     /** The target language as last seen, so a change can drop the old language's translations. */
     private String mTranslateLanguage;
 
@@ -296,6 +299,7 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         }
         mService = service;
         mTranslateEnabled = isTranslateEnabled();
+        mTranslateAlwaysShown = isTranslateAlwaysShown();
         mTranslateLanguage = commentTranslateLanguage();
 
         mTitles = layout.findViewById(R.id.comments_titles);
@@ -1583,6 +1587,11 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
         if (mNoTranslation.contains(id)) {
             entry.noTranslation = true;
             notifyEntry(entry, CommentsAdapter.PAYLOAD_TRANSLATE);
+            // NEWTUBE(comment-translate): "all comments" mode keeps the pill, so the repeat tap
+            // gets the note again without another request; "other languages" hides it.
+            if (isTranslateAlwaysShown()) {
+                MobileSnackbar.show(mActivity, R.string.mobile_comments_translate_none);
+            }
             return;
         }
         String text = entry.item.getMessage();
@@ -1601,8 +1610,9 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
                             if (generation == mGeneration && !mReleased
                                     && requestLanguage.equals(commentTranslateLanguage())) {
                                 entry.translating = false;
-                                // Same language: YouTube hands the original text back. Drop the
-                                // pill for this comment instead of showing a no-op translation.
+                                // Same language: YouTube hands the original text back. The mark
+                                // hides the pill only in "other languages" mode; "all comments"
+                                // keeps it and says so again on the next tap.
                                 if (translated.trim().equalsIgnoreCase(text.trim())) {
                                     entry.noTranslation = true;
                                     mNoTranslation.add(id);
@@ -1621,8 +1631,9 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
                             if (generation == mGeneration && !mReleased
                                     && requestLanguage.equals(commentTranslateLanguage())) {
                                 entry.translating = false;
-                                // "No translation" is final for this comment: hide the pill so a
-                                // repeat tap cannot produce the same note again.
+                                // "No translation" is final for this comment in "other languages"
+                                // mode (the pill hides); "all comments" keeps the pill and the
+                                // next tap shows the note again from the cache.
                                 if (error instanceof CommentsService.NoTranslationException) {
                                     entry.noTranslation = true;
                                     mNoTranslation.add(id);
@@ -1646,24 +1657,32 @@ final class CommentsPanel implements CommentsAdapter.Listener, CommentsPanelLayo
     }
 
     @Override
+    public boolean isTranslateAlwaysShown() {
+        return PlayerData.instance(mActivity).getCommentTranslateMode()
+                == PlayerData.COMMENT_TRANSLATE_MODE_ALL;
+    }
+
+    @Override
     public String getCommentTranslateLanguage() {
         return commentTranslateLanguage();
     }
 
     /**
-     * NEWTUBE(comment-translate): Settings may have changed the switch or the target language
-     * while the panel kept its rows. The switch only rebinds (cached translations are kept for
-     * when it comes back on); a new language drops cached translations and requests in the air so
-     * nothing is shown in the old language.
+     * NEWTUBE(comment-translate): Settings may have changed the switch, the target language or
+     * which comments offer the pill while the panel kept its rows. The switch and the display mode
+     * only rebind (cached translations are kept); a new language drops cached translations and
+     * requests in the air so nothing is shown in the old language.
      */
     void onTranslateSettingChanged() {
         boolean enabled = isTranslateEnabled();
+        boolean alwaysShown = isTranslateAlwaysShown();
         String language = commentTranslateLanguage();
         boolean languageChanged = !TextUtils.equals(language, mTranslateLanguage);
-        if (enabled == mTranslateEnabled && !languageChanged) {
+        if (enabled == mTranslateEnabled && alwaysShown == mTranslateAlwaysShown && !languageChanged) {
             return;
         }
         mTranslateEnabled = enabled;
+        mTranslateAlwaysShown = alwaysShown;
         if (languageChanged) {
             mTranslateLanguage = language;
             for (Disposable request : mTranslateRequests.values()) {

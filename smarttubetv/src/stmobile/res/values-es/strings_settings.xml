@@ -190,7 +190,10 @@
     <string name="mobile_settings_paid_promotion">Avisarme de promociones pagadas</string>
     <string name="mobile_settings_paid_promotion_summary">Un aviso breve cuando un vídeo dice que incluye una promoción pagada</string>
     <string name="mobile_settings_comment_translate">Traducir los comentarios</string>
-    <string name="mobile_settings_comment_translate_summary">Mostrar un botón Traducir bajo los comentarios en otros idiomas</string>
+    <string name="mobile_settings_comment_translate_summary">Mostrar un botón Traducir bajo los comentarios</string>
+    <string name="mobile_settings_comment_translate_mode">Cuándo mostrar Traducir</string>
+    <string name="mobile_settings_comment_translate_mode_other_languages">Solo en comentarios en otros idiomas</string>
+    <string name="mobile_settings_comment_translate_mode_all">En todos los comentarios</string>
     <string name="mobile_settings_comment_translate_language">Traducir los comentarios al</string>
 
     <!-- Video quality -->
